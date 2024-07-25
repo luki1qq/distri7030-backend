@@ -1,0 +1,111 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider        = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int         @id @default(autoincrement())
+  username  String?
+  password  String
+  firstName String
+  lastName  String
+  email     String      @unique
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  isActive  Boolean     @default(true)
+  lastLogin DateTime?
+  UserRoles UserRoles[]
+  AuditLogs AuditLogs[]
+}
+
+model UserRoles {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  roleId    Int
+  User      User      @relation(fields: [userId], references: [id])
+  RoleTable RoleTable @relation(fields: [roleId], references: [id])
+}
+
+model RoleTable {
+  id              Int               @id @default(autoincrement())
+  name            String
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  isActive        Boolean           @default(true)
+  description     String?
+  UserRoles       UserRoles[]
+  RolePermissions RolePermissions[]
+}
+
+model RolePermissions {
+  id              Int             @id @default(autoincrement())
+  roleId          Int
+  permissionId    Int
+  RoleTable       RoleTable       @relation(fields: [roleId], references: [id])
+  PermissionTable PermissionTable @relation(fields: [permissionId], references: [id])
+}
+
+model PermissionTable {
+  id              Int               @id @default(autoincrement())
+  name            String
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  isActive        Boolean           @default(true)
+  description     String?
+  RolePermissions RolePermissions[]
+}
+
+model AuditLogs {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  action    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  User      User     @relation(fields: [userId], references: [id])
+}
+
+model Products {
+  id                Int         @id @default(autoincrement())
+  codeCompatibility String
+  priceSale         Float
+  image             String
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  isActive          Boolean     @default(true)
+  description       String
+  Category          Category    @relation(fields: [categoryId], references: [id])
+  categoryId        Int
+  subCategory       subCategory @relation(fields: [subCategoryId], references: [id])
+  subCategoryId     Int
+}
+
+model Category {
+  id          Int           @id @default(autoincrement())
+  description String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  isActive    Boolean       @default(true)
+  Products    Products[]
+  subCategory subCategory[]
+}
+
+model subCategory {
+  id          Int        @id @default(autoincrement())
+  description String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  isActive    Boolean    @default(true)
+  Category    Category   @relation(fields: [categoryId], references: [id])
+  categoryId  Int
+  Products    Products[]
+}
