@@ -21,13 +21,13 @@ export const signupHandler = async (req, res) => {
 
 export const login = async (req, res) => {
   const { email, password } = req.body;
-
+  console.log(email, password);
   const userFound = await prisma.user.findUnique({ where: { email } });
   if (!userFound) {
     return res.status(400).json({ message: "El usuario no existe" });
   }
   console.log(userFound);
-  const isMatch = bcrypt.compare(password, userFound.password);
+  const isMatch = await bcrypt.compare(password, userFound.password);
   if (!isMatch) {
     return res.status(400).json({ message: "La contraseña es incorrecta." });
   }
