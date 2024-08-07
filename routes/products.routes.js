@@ -1,39 +1,17 @@
 import { Router } from "express";
 // import { prisma } from "../db.js";
 import { PrismaClient } from "@prisma/client";
+import {  createProduct, getProduct, getProducts,deleteProduct, getProductsByCategory } from "../controllers/products.controller.js";
+import { authRequired } from "../middlewares/validateToken.js";
+import { isAdmin } from "../middlewares/validateRol.js";
 
 const prisma = new PrismaClient();
 const router = Router();
-router.get("/get-products", async (req, res) => {
-  const products = await prisma.products.findMany();
-  res.json(products);
-});
 
-router.get("/get-product/:id", async (req, res) => {
-  const { id } = req.params;
-  const product = await prisma.products.findUnique({
-    where: {
-      id: parseInt(id),
-    },
-  });
-  res.json(product);
-});
-
-router.post("/create-product", async (req, res) => {
-  const { codeCompatibility, priceSale, isActive, description, categoryId, subCategoryId, image } = req.body;
-  const product = await prisma.products.create({
-    data: {
-      codeCompatibility,
-      priceSale,
-      isActive,
-      description,
-      categoryId,
-      subCategoryId,
-      image
-    },
-  });
-  res.json(product);
-})
-
+router.post("/create-product",authRequired, createProduct)
+router.get("/get-products", getProducts);
+router.get("/get-product/:id", getProduct);
+router.get("/get-products-by-category/:categoryId", getProductsByCategory);
+router.delete("/delete-product/:id", authRequired, isAdmin, deleteProduct);
 
 export default router;

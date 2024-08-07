@@ -5,7 +5,7 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider        = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -26,6 +26,8 @@ model User {
   lastLogin DateTime?
   UserRoles UserRoles[]
   AuditLogs AuditLogs[]
+  Order     Order[]
+  UserDiscount UserDiscount[]
 }
 
 model UserRoles {
@@ -75,18 +77,20 @@ model AuditLogs {
 }
 
 model Products {
-  id                Int         @id @default(autoincrement())
+  id                Int               @id @default(autoincrement())
   codeCompatibility String
   priceSale         Float
   image             String
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
-  isActive          Boolean     @default(true)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  isActive          Boolean           @default(true)
   description       String
-  Category          Category    @relation(fields: [categoryId], references: [id])
+  Category          Category          @relation(fields: [categoryId], references: [id])
   categoryId        Int
-  subCategory       subCategory @relation(fields: [subCategoryId], references: [id])
+  subCategory       subCategory       @relation(fields: [subCategoryId], references: [id])
   subCategoryId     Int
+  detailOrder       detailOrder[]
+  ProductDiscount   ProductDiscount[]
 }
 
 model Category {
@@ -108,4 +112,65 @@ model subCategory {
   Category    Category   @relation(fields: [categoryId], references: [id])
   categoryId  Int
   Products    Products[]
+}
+
+model Order {
+  id          Int           @id @default(autoincrement())
+  userId      Int
+  total       Float
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  isActive    Boolean       @default(true)
+  orderState  String        @default("PENDIENTE")
+  User        User          @relation(fields: [userId], references: [id])
+  detailOrder detailOrder[]
+}
+
+model detailOrder {
+  id        Int      @id @default(autoincrement())
+  orderId   Int
+  productId Int
+  quantity  Int
+  price     Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isActive  Boolean  @default(true)
+  Order     Order    @relation(fields: [orderId], references: [id])
+  Product   Products @relation(fields: [productId], references: [id])
+}
+
+model ProductDiscount {
+  id        Int      @id @default(autoincrement())
+  productId Int
+  discountId  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isActive  Boolean  @default(true)
+  Products  Products @relation(fields: [productId], references: [id])
+  Discount Discount @relation(fields: [discountId], references: [id])
+}
+
+model Discount {
+  id          Int      @id @default(autoincrement())
+  name        String
+  percentage  Float
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  isActive    Boolean  @default(true)
+  ProductDiscount ProductDiscount[]
+  UserDiscount    UserDiscount[]
+}
+
+model UserDiscount{
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  discountId  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isActive  Boolean  @default(true)
+  User      User     @relation(fields: [userId], references: [id])
+  Discount  Discount @relation(fields: [discountId], references: [id])
 }

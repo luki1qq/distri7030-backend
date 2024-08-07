@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `order` MODIFY `orderState` VARCHAR(191) NOT NULL DEFAULT 'PENDIENTE';
