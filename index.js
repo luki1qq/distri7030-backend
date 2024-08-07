@@ -6,7 +6,10 @@ import authRoutes from "./routes/auth.routes.js";
 import orderRoutes from "./routes/order.routes.js";
 import app from "./app.js";
 
+
+
 app.listen(3000);
+
 
 
 app.use("/api/products", productsRoutes);
