@@ -7,6 +7,7 @@ import {
   createRoles,
   logout,
   profile,
+  verifyToken
 } from "../controllers/auth.controller.js";
 import { authRequired } from "../middlewares/validateToken.js";
 const router = Router();
@@ -18,6 +19,7 @@ router.post("/signup", signupHandler);
 router.post("/login", login);
 router.post("/register", register);
 router.post("/logout", logout);
+router.get("/verifyToken", verifyToken);
 
 router.get("/profile", authRequired, profile);
 export default router;

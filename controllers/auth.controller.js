@@ -1,7 +1,10 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
 import { createAccessToken } from "../libs/jwt.js";
+import jwt from "jsonwebtoken";
+import { JWT_SECRET } from "../utils/secrets.js";
 const prisma = new PrismaClient();
+
 export const signupHandler = async (req, res) => {
   const { email, firstName, lastName, password } = req.body;
   let user = await PrismaClient.user.findUnique({ where: { email } });
@@ -24,16 +27,29 @@ export const login = async (req, res) => {
   console.log(email, password);
   const userFound = await prisma.user.findUnique({ where: { email } });
   if (!userFound) {
-    return res.status(400).json({ message: "El usuario no existe" });
+    return res.status(400).json(["las credenciales no son validas"]);
   }
   console.log(userFound);
   const isMatch = await bcrypt.compare(password, userFound.password);
   if (!isMatch) {
-    return res.status(400).json({ message: "La contraseña es incorrecta." });
+    return res.status(400).json(["las credenciales no son validas"]);
   }
+  // is Admin?
+  const isAdmin = await prisma.userRoles.findFirst({
+    where: {
+      userId: userFound.id,
+      roleId: 1,
+    },
+  });
+
+
   const token = await createAccessToken({ id: userFound.id });
   console.log(token);
-  res.cookie("token", token);
+  res.cookie("token", token, {
+    sameSite: "none",
+    secure: true,
+    httpOnly: false,
+  });
   res.json({
     id: userFound.id,
     firstName: userFound.firstName,
@@ -125,5 +141,27 @@ export const profile = async (req, res) => {
     firstName: userFound.firstName,
     lastName: userFound.lastName,
     email: userFound.email,
+  });
+};
+
+export const verifyToken = async (req, res) => {
+  const { token } = req.cookies;
+  if (!token) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  jwt.verify(token, JWT_SECRET, async (err, user) => {
+    if (err) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    const userFound = await prisma.user.findUnique({ where: { id: user.id } });
+    if(!userFound){
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json({
+      id: userFound.id,
+      firstName: userFound.firstName,
+      lastName: userFound.lastName,
+      email: userFound.email,
+    });
   });
 };
