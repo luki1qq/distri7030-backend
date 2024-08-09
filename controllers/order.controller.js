@@ -3,7 +3,26 @@ const prisma = new PrismaClient();
 
 export const getOrders = async (req, res) => {
   try {
-    const orders = await prisma.order.findMany();
+    const orders = await prisma.order.findMany({
+      where: {
+        userId: req.user.id,
+      },
+    });
+    res.json(orders);
+  } catch (error) {
+    console.error("Error getting products:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const getOrdersByUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const orders = await prisma.order.findMany({
+      where: {
+        userId: parseInt(userId),
+      },
+    });
     res.json(orders);
   } catch (error) {
     console.error("Error getting products:", error);
@@ -12,12 +31,14 @@ export const getOrders = async (req, res) => {
 };
 
 //toDo Validate Discount on the order controller
+// Consider using a middleware to validate the discount
+// The middleware should check if the discount is valid
 export const createOrder = async (req, res) => {
   try {
-    const { userId, detailOrder } = req.body;
+    const { detailOrder } = req.body;
 
     // Validate input
-    if (!userId || !detailOrder || !Array.isArray(detailOrder)) {
+    if (!req.user.id || !detailOrder || !Array.isArray(detailOrder)) {
       return res.status(400).json({ error: "Invalid input data" });
     }
 
@@ -32,7 +53,7 @@ export const createOrder = async (req, res) => {
     // Create order in the database
     const resultOrder = await prisma.order.create({
       data: {
-        userId,
+        userId : req.user.id,
         total,
         detailOrder: {
           create: detailOrder.map((item) => ({

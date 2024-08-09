@@ -3,6 +3,8 @@ import bcrypt from "bcrypt";
 import { createAccessToken } from "../libs/jwt.js";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../utils/secrets.js";
+import { RoleTable } from "./roles.js";
+
 const prisma = new PrismaClient();
 
 export const signupHandler = async (req, res) => {
@@ -25,7 +27,16 @@ export const signupHandler = async (req, res) => {
 export const login = async (req, res) => {
   const { email, password } = req.body;
   console.log(email, password);
-  const userFound = await prisma.user.findUnique({ where: { email } });
+  const userFound = await prisma.user.findUnique({
+    where: { email },
+    include: {
+      UserRoles: {
+        include: {
+          RoleTable: true,
+        },
+      },
+    },
+  });
   if (!userFound) {
     return res.status(400).json(["las credenciales no son validas"]);
   }
@@ -34,14 +45,9 @@ export const login = async (req, res) => {
   if (!isMatch) {
     return res.status(400).json(["las credenciales no son validas"]);
   }
-  // is Admin?
-  const isAdmin = await prisma.userRoles.findFirst({
-    where: {
-      userId: userFound.id,
-      roleId: 1,
-    },
-  });
-
+  const isAdmin = userFound.UserRoles.some(
+    (userRole) => userRole.RoleTable.name === RoleTable.ADMIN
+  );
 
   const token = await createAccessToken({ id: userFound.id });
   console.log(token);
@@ -55,6 +61,7 @@ export const login = async (req, res) => {
     firstName: userFound.firstName,
     lastName: userFound.lastName,
     email: userFound.email,
+    isAdmin: isAdmin,
   });
 };
 
@@ -154,7 +161,7 @@ export const verifyToken = async (req, res) => {
       return res.status(401).json({ message: "Unauthorized" });
     }
     const userFound = await prisma.user.findUnique({ where: { id: user.id } });
-    if(!userFound){
+    if (!userFound) {
       return res.status(404).json({ message: "User not found" });
     }
     res.json({

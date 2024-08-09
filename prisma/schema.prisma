@@ -14,19 +14,19 @@ datasource db {
 }
 
 model User {
-  id        Int         @id @default(autoincrement())
-  username  String?
-  password  String
-  firstName String
-  lastName  String
-  email     String      @unique
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
-  isActive  Boolean     @default(true)
-  lastLogin DateTime?
-  UserRoles UserRoles[]
-  AuditLogs AuditLogs[]
-  Order     Order[]
+  id           Int            @id @default(autoincrement())
+  username     String?
+  password     String
+  firstName    String
+  lastName     String
+  email        String         @unique
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  isActive     Boolean        @default(true)
+  lastLogin    DateTime?
+  UserRoles    UserRoles[]
+  AuditLogs    AuditLogs[]
+  Order        Order[]
   UserDiscount UserDiscount[]
 }
 
@@ -80,7 +80,7 @@ model Products {
   id                Int               @id @default(autoincrement())
   codeCompatibility String
   priceSale         Float
-  image             String
+  image             String            @db.VarChar(500)
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
   isActive          Boolean           @default(true)
@@ -140,37 +140,37 @@ model detailOrder {
 }
 
 model ProductDiscount {
-  id        Int      @id @default(autoincrement())
-  productId Int
-  discountId  Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  isActive  Boolean  @default(true)
-  Products  Products @relation(fields: [productId], references: [id])
-  Discount Discount @relation(fields: [discountId], references: [id])
+  id         Int      @id @default(autoincrement())
+  productId  Int
+  discountId Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  isActive   Boolean  @default(true)
+  Products   Products @relation(fields: [productId], references: [id])
+  Discount   Discount @relation(fields: [discountId], references: [id])
 }
 
 model Discount {
-  id          Int      @id @default(autoincrement())
-  name        String
-  percentage  Float
-  description String?
-  startDate   DateTime
-  endDate     DateTime
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  isActive    Boolean  @default(true)
+  id              Int               @id @default(autoincrement())
+  name            String
+  percentage      Float
+  description     String?
+  startDate       DateTime
+  endDate         DateTime
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  isActive        Boolean           @default(true)
   ProductDiscount ProductDiscount[]
   UserDiscount    UserDiscount[]
 }
 
-model UserDiscount{
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  discountId  Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  isActive  Boolean  @default(true)
-  User      User     @relation(fields: [userId], references: [id])
-  Discount  Discount @relation(fields: [discountId], references: [id])
+model UserDiscount {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  discountId Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  isActive   Boolean  @default(true)
+  User       User     @relation(fields: [userId], references: [id])
+  Discount   Discount @relation(fields: [discountId], references: [id])
 }
