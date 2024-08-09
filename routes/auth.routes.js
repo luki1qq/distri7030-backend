@@ -12,7 +12,7 @@ import {
   GETresetPassword,
   forgotPassword,
   POSTresetPassword,
-  createClient
+  verifyToken
 } from "../controllers/auth.controller.js";
 import { authRequired } from "../middlewares/validateToken.js";
 const router = Router();
@@ -31,6 +31,7 @@ router.get('/confirm/:token', confirm)
 router.get('/reset-password/:id/:token', GETresetPassword)
 router.post('/forgot-password', forgotPassword)
 router.post('/reset-password/:id/:token', POSTresetPassword)
+router.get("/verifyToken", verifyToken);
 
 router.get("/profile", authRequired, profile);
 router.post('/resend-client', authRequired, reSendEmailClient)

@@ -7,8 +7,10 @@ import { getOrders, createOrder, cancelOrder } from "../controllers/order.contro
 
 const router = Router();
 
-router.get("/get-orders", getOrders);
+router.get("/get-orders",authRequired, getOrders);
 router.post("/create-order", authRequired, createOrder);
 router.post("/cancel-order/:orderId", authRequired, cancelOrder);
+
+router.get("/get-order/:id", getOrders);
 
 export default router;

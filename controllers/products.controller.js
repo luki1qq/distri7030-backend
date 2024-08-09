@@ -17,6 +17,35 @@ export const createProduct = async (req, res) => {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
+    if (
+      typeof categoryId === "undefined" ||
+      typeof subCategoryId === "undefined" ||
+      typeof priceSale === "undefined"
+    ) {
+      return res.status(400).json(["Invalid category or subcategory ID"]);
+    }
+
+    if (typeof priceSale !== "number") {
+      return res.status(400).json(["Invalid price expected number"]);
+    }
+    if (typeof codeCompatibility !== "string") {
+      return res
+        .status(400)
+        .json(["Invalid codeCompatibility expected string"]);
+    }
+    if (typeof image !== "string") {
+      return res.status(400).json(["Invalid image expected string"]);
+    }
+    if (typeof description !== "string") {
+      return res.status(400).json(["Invalid description expected string"]);
+    }
+    if (typeof categoryId !== "number") {
+      return res.status(400).json(["Invalid categoryId expected number"]);
+    }
+    if (typeof subCategoryId !== "number") {
+      return res.status(400).json(["Invalid subCategoryId expected number"]);
+    }
+
     // Verificación de existencia de categoría y subcategoría
     const [categoryExists, subCategoryExists] = await prisma.$transaction([
       prisma.category.findUnique({ where: { id: categoryId } }),
@@ -64,6 +93,22 @@ export const getProducts = async (req, res) => {
   }
 };
 
+export const getProductsWithDiscount = async (req, res) => {
+  try {
+    const products = await prisma.products.findMany({
+      where: {
+        discount: {
+          not: null,
+        },
+      },
+    });
+    res.json(products);
+  } catch (error) {
+    console.error("Error getting products:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 export const getProductsByCategory = async (req, res) => {
   try {
     const { categoryId } = req.params;
@@ -77,8 +122,7 @@ export const getProductsByCategory = async (req, res) => {
     console.error("Error getting products:", error);
     res.status(500).json({ error: "Internal server error" });
   }
-}
-
+};
 
 export const getProduct = async (req, res) => {
   try {

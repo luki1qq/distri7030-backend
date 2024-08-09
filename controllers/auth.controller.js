@@ -6,7 +6,12 @@ import { createAccessToken } from "../libs/jwt.js";
 import { generatePassword } from "../utils/generateRamdonPassword.js";
 import { sendEmail } from "../utils/transporterNodeMailer.js";
 import { getEmailByToken } from "../utils/getEmailByToken.js";
+import jwt from "jsonwebtoken";
+import { JWT_SECRET } from "../utils/secrets.js";
+import { RoleTable } from "./roles.js";
+
 const prisma = new PrismaClient();
+
 export const signupHandler = async (req, res) => {
   const { email, firstName, lastName, password } = req.body;
   let user = await PrismaClient.user.findUnique({ where: { email } });
@@ -26,24 +31,42 @@ export const signupHandler = async (req, res) => {
 
 export const login = async (req, res) => {
   const { email, password } = req.body;
-
-  const userFound = await prisma.user.findUnique({ where: { email } });
+  console.log(email, password);
+  const userFound = await prisma.user.findUnique({
+    where: { email },
+    include: {
+      UserRoles: {
+        include: {
+          RoleTable: true,
+        },
+      },
+    },
+  });
   if (!userFound) {
-    return res.status(400).json({ message: "El usuario no existe" });
+    return res.status(400).json(["las credenciales no son validas"]);
   }
   console.log(userFound);
-  const isMatch = bcrypt.compare(password, userFound.password);
+  const isMatch = await bcrypt.compare(password, userFound.password);
   if (!isMatch) {
-    return res.status(400).json({ message: "La contraseña es incorrecta." });
+    return res.status(400).json(["las credenciales no son validas"]);
   }
+  const isAdmin = userFound.UserRoles.some(
+    (userRole) => userRole.RoleTable.name === RoleTable.ADMIN
+  );
+
   const token = await createAccessToken({ id: userFound.id });
   console.log(token);
-  res.cookie("token", token);
+  res.cookie("token", token, {
+    sameSite: "none",
+    secure: true,
+    httpOnly: false,
+  });
   res.json({
     id: userFound.id,
     firstName: userFound.firstName,
     lastName: userFound.lastName,
     email: userFound.email,
+    isAdmin: isAdmin,
   });
 };
 
@@ -349,3 +372,24 @@ const sendEmailActivate = (email, user) => {
 //     res.status(404).json({ message: error.message, ok: false })
 //   }
 // }
+export const verifyToken = async (req, res) => {
+  const { token } = req.cookies;
+  if (!token) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  jwt.verify(token, JWT_SECRET, async (err, user) => {
+    if (err) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    const userFound = await prisma.user.findUnique({ where: { id: user.id } });
+    if (!userFound) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json({
+      id: userFound.id,
+      firstName: userFound.firstName,
+      lastName: userFound.lastName,
+      email: userFound.email,
+    });
+  });
+};
