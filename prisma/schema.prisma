@@ -14,19 +14,21 @@ datasource db {
 }
 
 model User {
-  id           Int            @id @default(autoincrement())
-  username     String?
-  password     String
-  firstName    String
-  lastName     String
-  email        String         @unique
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-  isActive     Boolean        @default(true)
-  lastLogin    DateTime?
-  UserRoles    UserRoles[]
-  AuditLogs    AuditLogs[]
-  Order        Order[]
+  id        Int         @id @default(autoincrement())
+  username  String?
+  password  String
+  firstName String
+  lastName  String
+  email     String      @unique
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  isActive  Boolean     @default(true)
+  hasChangedPass  Boolean     @default(false)
+  verified  Boolean     @default(false)
+  lastLogin DateTime?
+  UserRoles UserRoles[]
+  AuditLogs AuditLogs[]
+  Order     Order[]
   UserDiscount UserDiscount[]
 }
 

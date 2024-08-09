@@ -8,7 +8,7 @@ import nodemailer from 'nodemailer'
 //   }
 
 // })
-export const sendEmail = (email, link, subject, message) => {
+export const sendEmail = (email,subject, message) => {
   const transport = nodemailer.createTransport({
     service: "gmail",
     auth: {

@@ -6,6 +6,8 @@ import orderRoutes from "./routes/order.routes.js";
 import discountRoutes from "./routes/discount.routes.js";
 import app from "./app.js";
 
+
+
 app.listen(3000);
 
 app.use("/api/products", productsRoutes);
