@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { update } from "../controllers/user.controller.js";
+import { activate, desactivate, update } from "../controllers/user.controller.js";
 
 const router = Router();
 
@@ -9,5 +9,7 @@ router.get("/users", (req, res) => {
 });
 
 router.put("/update/:id", update);
+router.put("/desactivate/:id", desactivate);
+router.put("/activate/:id", activate);
 
 export default router;

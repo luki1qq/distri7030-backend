@@ -1,7 +1,5 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
-import jwt from 'jsonwebtoken'
-
 import { createAccessToken } from "../libs/jwt.js";
 import { generatePassword } from "../utils/generateRamdonPassword.js";
 import { sendEmail } from "../utils/transporterNodeMailer.js";
@@ -9,6 +7,7 @@ import { getEmailByToken } from "../utils/getEmailByToken.js";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../utils/secrets.js";
 import { RoleTable } from "./roles.js";
+import { getIdByToken } from "../utils/getIdByToken.js";
 
 const prisma = new PrismaClient();
 
@@ -45,6 +44,9 @@ export const login = async (req, res) => {
   if (!userFound) {
     return res.status(400).json(["las credenciales no son validas"]);
   }
+  if (!userFound.isActive) {
+    return res.status(400).json(["El usuario no esta activo"]);
+  }
   console.log(userFound);
   const isMatch = await bcrypt.compare(password, userFound.password);
   if (!isMatch) {
@@ -67,6 +69,8 @@ export const login = async (req, res) => {
     lastName: userFound.lastName,
     email: userFound.email,
     isAdmin: isAdmin,
+    verified: userFound.verified,
+    isActive:userFound.isActive
   });
 };
 
@@ -183,7 +187,7 @@ export const createClient = async (req,res)=>{
 
       });
       
-      sendEmailActivate(email, { email, password })
+      sendEmailActivate(email, { email, password, id: userSaved.id })
       res.status(200).send("ok")
 
     } catch (error) {
@@ -206,7 +210,7 @@ export const confirm = async (req, res) => {
         verified: true,
       },
     });
-    res.status(200).render("verified");
+    res.status(200).render("setPassword");
 
   } catch (error) {
     console.log(error)
@@ -235,7 +239,7 @@ export const reSendEmailClient = async (req, res) => {
       },
     });
 
-    sendEmailActivate(email, { email, password })
+    sendEmailActivate(email, { email, password,id })
     return res.status(200).send({ ok: true })
   } catch (error) {
     console.log(error)
@@ -320,22 +324,62 @@ export const POSTresetPassword = async (req, res) => {
 
 
 
+export const GETSetPassword = async (req, res) => {
+  const { id, token } = req.params;
+  const idParse = parseInt(id, 10);
+  const oldUser = await prisma.user.findUnique({ where: { id: idParse } });
+  if (!oldUser) {
+    return res.status(404).json({ message: "User no exits" });
+  }
+  const secret = process.env.JWT_SECRET + oldUser.password;
+  try {
+    const verify = jwt.verify(token, secret);
+    res.render("setPassword");
+  } catch (error) {
+    console.log(error);
+    res.status(404).send("Link inválido");
+  }
+}
 
+export const POSTSetPassword = async (req, res) => {
+  const { token } = req.params;
+  const { password } = req.body;
+  const id = parseInt(getIdByToken(token))
+  console.log(id)
+  const oldUser = await prisma.user.findUnique({ where: { id:id } });
+  if (!oldUser) {
+    return res.status(404).json({ message: "User no exits" });
+  }
+  try {
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    await prisma.user.update({
+      where: {
+        id,
+      },
+      data: {
+        password: passwordHash,
+      },
+    });
+
+    res.render("redirect");
+  } catch (error) {
+    console.log(error);
+    return res.status(400).json({ ok: false, message: 'Ocurrió un error.' })
+  }
+}
 
 
 
 
 
 const sendEmailActivate = (email, user) => {
-
-  var token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '2d' })
+  let id = user.id;
+  var token = jwt.sign({ email , id}, process.env.JWT_SECRET, { expiresIn: '2d' })
   const urlConfirm = `${process.env.APIGATEWAY_URL}/api/auth/confirm/${token}`
-  let 
-    message = `<p>Tu cuenta de cliente es: <br>
+  let message = `<p>Tu cuenta de cliente es: <br>
       CORREO ELECTRONICO: ${user.email}
-      CONSTRASEÑA: ${user.password}
-      Confirma tu mail haciendo click en el siguiente enlace.
-      Luego una vez que inicies sesión, debes cambiar la contraseña. </p> 
+      Confirma tu mail haciendo click en el siguiente enlace y establece una contraseña. </p> 
             <a href="${urlConfirm}" style="display: inline-block; margin-top: 20px; padding: 10px 20px; background-color: #4CAF50; color: #fff; text-decoration: none; border-radius: 5px; font-size: 16px;">CONFIRMAR EMAIL</a>
             <small>Link válido por 3 dias</small>`
 
