@@ -27,6 +27,6 @@ export const sendEmail = (email,subject, message) => {
     if (error) {
       console.log(error)
     }
-    console.log("email sent" + info.response)
+    // console.log("email sent" + info.response)
   })
 }

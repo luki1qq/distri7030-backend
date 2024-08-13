@@ -33,3 +33,47 @@ export const update = async (req, res) => {
     res.status(404).json({ message: error.message })
   }
 }
+
+export const desactivate = async (req, res) => {
+  const { id } = req.params
+  const idParse = parseInt(id, 10);
+  
+  try {
+
+    const user = await prisma.user.findUnique({ where: { id: idParse } });
+    await prisma.user.update({
+      where: {
+        id: idParse,
+      },
+      data: {
+        isActive: false,
+      },
+    });
+
+    return res.json({ ok: true })
+  } catch (error) {
+    res.status(404).json({ message: error.message })
+  }
+}
+
+export const activate = async (req, res) => {
+  const { id } = req.params
+  const idParse = parseInt(id, 10);
+
+  try {
+
+    const user = await prisma.user.findUnique({ where: { id: idParse } });
+    await prisma.user.update({
+      where: {
+        id: idParse,
+      },
+      data: {
+        isActive: true,
+      },
+    });
+
+    return res.json({ ok: true })
+  } catch (error) {
+    res.status(404).json({ message: error.message })
+  }
+}
