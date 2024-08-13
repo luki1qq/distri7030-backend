@@ -195,48 +195,20 @@ export const createClient = async (req,res)=>{
       console.log(error)
       res.status(500).json({ message: "Error creating user" });
 
-  try {
-    const user = await prisma.user.findUnique({ where: { email } });
-    if (user) {
-      return res.status(400).json({ messsage: "User already exists" });
-    }
-    const passwordHash = await bcrypt.hash(password, 10);
-
-    const userSaved = await prisma.user.create({
-      data: {
-        password: passwordHash,
-        email,
-        firstName,
-        lastName,
-      },
-    });
-    await prisma.userRoles.create({
-      data: {
-        userId: userSaved.id,
-        roleId: 2, // User default (Puede ser 1 si es admin)
-      },
-    });
-
-    sendEmailActivate(email, { email, password });
-    res.status(200).send("ok");
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Error creating user" });
-  }
-};
+}};
 
 export const confirm = async (req, res) => {
   try {
     const email = getEmailByToken(req.params.token);
-    console.log("confrim", email);
-    const updatedUser = await prisma.user.update({
-      where: {
-        email,
-      },
-      data: {
-        verified: true,
-      },
-    });
+    // console.log("confrim", email);
+    // const updatedUser = await prisma.user.update({
+    //   where: {
+    //     email,
+    //   },
+    //   data: {
+    //     verified: true,
+    //   },
+    // });
     // const email = getEmailByToken(req.params.token)
     res.status(200).render("setPassword");
   } catch (error) {
@@ -355,11 +327,11 @@ export const POSTresetPassword = async (req, res) => {
 
 };
 
-const sendEmailActivate = (email, user) => {
-  var token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: "2d" });
-  const urlConfirm = `${process.env.APIGATEWAY_URL}/api/auth/confirm/${token}`;
+// const sendEmailActivate = (email, user) => {
+//   var token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: "2d" });
+//   const urlConfirm = `${process.env.APIGATEWAY_URL}/api/auth/confirm/${token}`;
 
-}
+// }
 
 
 
@@ -476,4 +448,4 @@ export const verifyToken = async (req, res) => {
       email: userFound.email,
     });
   });
-};
+}
