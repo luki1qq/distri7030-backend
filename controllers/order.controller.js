@@ -6,6 +6,7 @@ export const getOrders = async (req, res) => {
     const orders = await prisma.order.findMany({
       where: {
         userId: req.user.id,
+        isActive: true,
       },
     });
     res.json(orders);
@@ -36,14 +37,21 @@ export const getOrdersByUser = async (req, res) => {
 export const createOrder = async (req, res) => {
   try {
     const { detailOrder } = req.body;
-
+    console.log(detailOrder);
+    // return res.status(201).json(detailOrder);
     // Validate input
     if (!req.user.id || !detailOrder || !Array.isArray(detailOrder)) {
-      return res.status(400).json({ error: "Invalid input data" });
+      return res.status(400).json(["Invalid input data"]);
     }
-
     // Calculate total based on detailOrder items
     const total = detailOrder.reduce((acc, item) => {
+      if (
+        typeof item.quantity !== "number" ||
+        typeof item.price !== "number" ||
+        typeof item.productId !== "number"
+      ) {
+        return res.status(400).json(["Invalid input data"]);
+      }
       if (!item.productId || !item.quantity || !item.price) {
         throw new Error("Incomplete detailOrder item"); // Throw error for missing data
       }
@@ -53,8 +61,9 @@ export const createOrder = async (req, res) => {
     // Create order in the database
     const resultOrder = await prisma.order.create({
       data: {
-        userId : req.user.id,
+        userId: req.user.id,
         total,
+        observation: req.body.observation,
         detailOrder: {
           create: detailOrder.map((item) => ({
             productId: item.productId,
@@ -75,20 +84,14 @@ export const createOrder = async (req, res) => {
 
 export const cancelOrder = async (req, res) => {
   try {
-    const { orderId } = req.params;
-
-    // Validate input
-    if (!orderId) {
-      return res.status(400).json({ error: "Invalid input data" });
-    }
-
+    console.log(req.params.id);
     // Delete order from the database
-    await prisma.order.update({
-      where: { id: Number(orderId) },
-      data: { status: "CANCELADO" },
+    const updateOrder = await prisma.order.update({
+      where: { id: Number(req.params.id) },
+      data: { orderState: "CANCELADO" },
     });
 
-    res.status(204).end();
+    res.status(204).json(updateOrder);
   } catch (error) {
     console.error(error); // Log the error for debugging
     res.status(500).json({ error: "Error canceling order" });

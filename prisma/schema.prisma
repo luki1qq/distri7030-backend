@@ -14,22 +14,24 @@ datasource db {
 }
 
 model User {
-  id        Int         @id @default(autoincrement())
-  username  String?
-  password  String
-  firstName String
-  lastName  String
-  email     String      @unique
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
-  isActive  Boolean     @default(false)
-  // hasChangedPass  Boolean     @default(false)
-  // verified  Boolean     @default(false)
-  lastLogin DateTime?
-  UserRoles UserRoles[]
-  AuditLogs AuditLogs[]
-  Order     Order[]
-  UserDiscount UserDiscount[]
+
+  id             Int            @id @default(autoincrement())
+  username       String?
+  password       String
+  firstName      String
+  lastName       String
+  email          String         @unique
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  isActive       Boolean        @default(true)
+  hasChangedPass Boolean        @default(false)
+  verified       Boolean        @default(false)
+  lastLogin      DateTime?
+  UserRoles      UserRoles[]
+  AuditLogs      AuditLogs[]
+  Order          Order[]
+  UserDiscount   UserDiscount[]
+
 }
 
 model UserRoles {
@@ -120,6 +122,7 @@ model Order {
   id          Int           @id @default(autoincrement())
   userId      Int
   total       Float
+  observation String?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   isActive    Boolean       @default(true)

@@ -9,7 +9,7 @@ const router = Router();
 
 router.get("/get-orders",authRequired, getOrders);
 router.post("/create-order", authRequired, createOrder);
-router.post("/cancel-order/:orderId", authRequired, cancelOrder);
+router.put("/cancel-order/:id", authRequired, cancelOrder);
 
 router.get("/get-order/:id", getOrders);
 
