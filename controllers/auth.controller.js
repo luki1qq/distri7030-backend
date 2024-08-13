@@ -99,6 +99,7 @@ export const register = async (req, res) => {
         data: {
           userId: userSaved.id,
           roleId: roleId,
+          isActive:true // suponiendo que cuando se pasa un rol no es cliente
         },
       });
     } else {
@@ -200,16 +201,7 @@ export const createClient = async (req,res)=>{
 
 export const confirm = async (req, res) => {
   try {
-    const email = getEmailByToken(req.params.token)
-    console.log("confrim", email)
-    const updatedUser = await prisma.user.update({
-      where: {
-        email,
-      },
-      data: {
-        verified: true,
-      },
-    });
+    // const email = getEmailByToken(req.params.token)
     res.status(200).render("setPassword");
 
   } catch (error) {
@@ -278,6 +270,7 @@ export const GETresetPassword = async (req, res) => {
   const idParse = parseInt(id, 10);
   const oldUser = await prisma.user.findUnique({ where: { id: idParse } });
   if (!oldUser) {
+    console.log('aqi')
     return res.status(404).json({ message: "User no exits" });
   }
   const secret = process.env.JWT_SECRET + oldUser.password;
@@ -297,6 +290,8 @@ export const POSTresetPassword = async (req, res) => {
 
   const oldUser = await prisma.user.findUnique({ where: { id:idParse } });
   if (!oldUser) {
+    console.log('aqi 2')
+
     return res.status(404).json({ message: "User no exits" });
   }
   // const secret = process.env.JWT_SECRET + oldUser.password;
@@ -311,6 +306,7 @@ export const POSTresetPassword = async (req, res) => {
       },
       data: {
         password: passwordHash,
+        isActive:true
       },
     });
 
