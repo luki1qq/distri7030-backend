@@ -24,7 +24,7 @@ router.post("/signup", signupHandler);
 router.post("/login", login);
 router.post("/register", register);
 router.post("/logout", logout);
-router.post("/create-client", createClient);
+// router.post("/create-client", createClient);
 
 router.get('/confirm/:token', confirm)
 
