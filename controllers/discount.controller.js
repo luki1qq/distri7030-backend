@@ -49,8 +49,9 @@ export const createDiscount = async (req, res) => {
     if (!percentage || !name || !startDate || !endDate || !products) {
       return res.status(400).json(["Invalid input data"]);
     }
-    const productsId = products.map((product) => product.id);
+    // const productsId = products.map((product) => product.id);
     // Create discount in the database
+    // console.log(productsId)
     const resultDiscount = await prisma.discount.create({
       data: {
         percentage,
@@ -58,7 +59,7 @@ export const createDiscount = async (req, res) => {
         startDate,
         endDate,
         ProductDiscount: {
-          create: productsId.map((productId) => ({ productId })),
+          create: products.map((productId) => ({ productId })),
         },
       },
     });

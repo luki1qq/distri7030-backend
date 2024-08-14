@@ -161,9 +161,32 @@ export const profile = async (req, res) => {
   });
 };
 
-export const createClient = async (req, res) => {
-  const { email, firstName, lastName } = req.body;
-  const password = generatePassword();
+
+export const createClient = async (req,res)=>{
+  const { email, firstName, lastName } = req.body
+    const password = generatePassword();
+
+    try {
+      const user = await prisma.user.findUnique({ where: { email } });
+      if (user) {
+        return res.status(400).json({ message: "El cliente ya fue creado." });
+      }
+      const passwordHash = await bcrypt.hash(password, 10);
+
+      const userSaved = await prisma.user.create({
+        data: {
+          password: passwordHash,
+          email,
+          firstName,
+          lastName
+        },
+      });
+      await prisma.userRoles.create({
+        data: {
+          userId: userSaved.id,
+          roleId: 2, // User default (Puede ser 1 si es admin)
+        },
+
 
   try {
     const user = await prisma.user.findUnique({ where: { email } });
@@ -221,6 +244,7 @@ export const reSendEmailClient = async (req, res) => {
 
   try {
     const user = await prisma.user.findUnique({ where: { email } });
+    console.log(user)
     if (!user) {
       return res.status(404).json({ message: "User no exits" });
     }
@@ -228,15 +252,20 @@ export const reSendEmailClient = async (req, res) => {
 
     await prisma.user.update({
       where: {
-        id: user.id,
+        email,
       },
       data: {
         password: passwordHash,
+        verified:true
       },
     });
 
-    sendEmailActivate(email, { email, password, id });
-    return res.status(200).send({ ok: true });
+    const id = user.id
+    sendEmailActivate(email, { email, password,id })
+
+    return res.status(200).send({ ok: true })
+
+
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Error al enviar el mail", ok: false });
@@ -252,7 +281,7 @@ export const forgotPassword = async (req, res) => {
     }
     const secret = process.env.JWT_SECRET + oldUser.password;
     const token = jwt.sign({ email: oldUser.email, id: oldUser.id }, secret, {
-      expiresIn: "10m",
+      expiresIn: "1d",
     });
     const link = `${process.env.APIGATEWAY_URL}/api/auth/reset-password/${oldUser.id}/${token}`;
 
@@ -311,7 +340,9 @@ export const POSTresetPassword = async (req, res) => {
       },
       data: {
         password: passwordHash,
-        isActive: true,
+
+        verified:true
+
       },
     });
 

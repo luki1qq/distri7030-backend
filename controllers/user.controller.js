@@ -77,3 +77,34 @@ export const activate = async (req, res) => {
     res.status(404).json({ message: error.message })
   }
 }
+
+export const getUsers = async (req, res) => {
+  try {
+    const users = await prisma.user.findMany({
+      where: {
+        UserRoles: {
+          some: {
+            roleId: 2, // Filtra usuarios que tengan roleId igual a 2 en la relación UserRoles
+          },
+        },
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        isActive: true,
+        verified:true
+        // UserRoles: {
+        //   select: {
+        //     roleId: true,
+        //   },
+        // },
+      },
+    });
+    console.log(users);
+    res.json(users)
+  } catch (error) {
+    console.error('Error al obtener los usuarios con roleId 2:', error);
+  }
+};
