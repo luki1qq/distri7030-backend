@@ -4,7 +4,7 @@ import { JWT_SECRET } from "../utils/secrets.js";
 export const authRequired = async (req, res, next) => {
   try {
     const { token } = req.cookies;
-    
+
     if (!token) {
       return res.status(401).json({ message: "Unauthorized" });
     }

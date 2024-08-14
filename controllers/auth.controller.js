@@ -70,7 +70,7 @@ export const login = async (req, res) => {
     email: userFound.email,
     isAdmin: isAdmin,
     verified: userFound.verified,
-    isActive:userFound.isActive
+    isActive: userFound.isActive,
   });
 };
 
@@ -99,7 +99,7 @@ export const register = async (req, res) => {
         data: {
           userId: userSaved.id,
           roleId: roleId,
-          isActive:true // suponiendo que cuando se pasa un rol no es cliente
+          isActive: true, // suponiendo que cuando se pasa un rol no es cliente
         },
       });
     } else {
@@ -161,6 +161,7 @@ export const profile = async (req, res) => {
   });
 };
 
+
 export const createClient = async (req,res)=>{
   const { email, firstName, lastName } = req.body
     const password = generatePassword();
@@ -186,16 +187,36 @@ export const createClient = async (req,res)=>{
           roleId: 2, // User default (Puede ser 1 si es admin)
         },
 
-      });
-      
-      sendEmailActivate(email, { email, password, id: userSaved.id })
-      res.status(200).send("ok")
 
-    } catch (error) {
-      console.log(error)
-      res.status(500).json({ message: "Error creating user" });
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (user) {
+      return res.status(400).json({ messsage: "User already exists" });
+    }
+    const passwordHash = await bcrypt.hash(password, 10);
 
-}};
+    const userSaved = await prisma.user.create({
+      data: {
+        password: passwordHash,
+        email,
+        firstName,
+        lastName,
+      },
+    });
+    await prisma.userRoles.create({
+      data: {
+        userId: userSaved.id,
+        roleId: 2, // User default (Puede ser 1 si es admin)
+      },
+    });
+
+    sendEmailActivate(email, { email, password, id: userSaved.id });
+    res.status(200).send("ok");
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Error creating user" });
+  }
+};
 
 export const confirm = async (req, res) => {
   try {
@@ -238,10 +259,12 @@ export const reSendEmailClient = async (req, res) => {
         verified:true
       },
     });
+
     const id = user.id
     sendEmailActivate(email, { email, password,id })
 
     return res.status(200).send({ ok: true })
+
 
   } catch (error) {
     console.log(error);
@@ -281,7 +304,7 @@ export const GETresetPassword = async (req, res) => {
   const idParse = parseInt(id, 10);
   const oldUser = await prisma.user.findUnique({ where: { id: idParse } });
   if (!oldUser) {
-    console.log('aqi')
+    console.log("aqi");
     return res.status(404).json({ message: "User no exits" });
   }
   const secret = process.env.JWT_SECRET + oldUser.password;
@@ -301,7 +324,7 @@ export const POSTresetPassword = async (req, res) => {
 
   const oldUser = await prisma.user.findUnique({ where: { id: idParse } });
   if (!oldUser) {
-    console.log('aqi 2')
+    console.log("aqi 2");
 
     return res.status(404).json({ message: "User no exits" });
   }
@@ -317,7 +340,9 @@ export const POSTresetPassword = async (req, res) => {
       },
       data: {
         password: passwordHash,
+
         verified:true
+
       },
     });
 
@@ -326,7 +351,6 @@ export const POSTresetPassword = async (req, res) => {
     console.log(error);
     return res.status(400).json({ ok: false, message: "Ocurrió un error." });
   }
-
 };
 
 // const sendEmailActivate = (email, user) => {
@@ -334,9 +358,6 @@ export const POSTresetPassword = async (req, res) => {
 //   const urlConfirm = `${process.env.APIGATEWAY_URL}/api/auth/confirm/${token}`;
 
 // }
-
-
-
 
 export const GETSetPassword = async (req, res) => {
   const { id, token } = req.params;
@@ -353,14 +374,14 @@ export const GETSetPassword = async (req, res) => {
     console.log(error);
     res.status(404).send("Link inválido");
   }
-}
+};
 
 export const POSTSetPassword = async (req, res) => {
   const { token } = req.params;
   const { password } = req.body;
-  const id = parseInt(getIdByToken(token))
-  console.log(id)
-  const oldUser = await prisma.user.findUnique({ where: { id:id } });
+  const id = parseInt(getIdByToken(token));
+  console.log(id);
+  const oldUser = await prisma.user.findUnique({ where: { id: id } });
   if (!oldUser) {
     return res.status(404).json({ message: "User no exits" });
   }
@@ -379,18 +400,16 @@ export const POSTSetPassword = async (req, res) => {
     res.render("redirect");
   } catch (error) {
     console.log(error);
-    return res.status(400).json({ ok: false, message: 'Ocurrió un error.' })
+    return res.status(400).json({ ok: false, message: "Ocurrió un error." });
   }
-}
-
-
-
-
+};
 
 const sendEmailActivate = (email, user) => {
   let id = user.id;
-  var token = jwt.sign({ email , id}, process.env.JWT_SECRET, { expiresIn: '2d' })
-  const urlConfirm = `${process.env.APIGATEWAY_URL}/api/auth/confirm/${token}`
+  var token = jwt.sign({ email, id }, process.env.JWT_SECRET, {
+    expiresIn: "2d",
+  });
+  const urlConfirm = `${process.env.APIGATEWAY_URL}/api/auth/confirm/${token}`;
   let message = `<p>Tu cuenta de cliente es: <br>
       CORREO ELECTRONICO: ${user.email}
       Confirma tu mail haciendo click en el siguiente enlace y establece una contraseña. </p> 
@@ -439,15 +458,28 @@ export const verifyToken = async (req, res) => {
     if (err) {
       return res.status(401).json({ message: "Unauthorized" });
     }
-    const userFound = await prisma.user.findUnique({ where: { id: user.id } });
+    const userFound = await prisma.user.findUnique({
+      where: { id: user.id },
+      include: {
+        UserRoles: {
+          include: {
+            RoleTable: true,
+          },
+        },
+      },
+    });
     if (!userFound) {
       return res.status(404).json({ message: "User not found" });
     }
+    const isAdmin = userFound.UserRoles.some(
+      (userRole) => userRole.RoleTable.name === RoleTable.ADMIN
+    );
     res.json({
       id: userFound.id,
       firstName: userFound.firstName,
       lastName: userFound.lastName,
       email: userFound.email,
+      isAdmin: isAdmin,
     });
   });
-}
+};
