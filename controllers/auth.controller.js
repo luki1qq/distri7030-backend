@@ -161,37 +161,14 @@ export const profile = async (req, res) => {
   });
 };
 
-
-export const createClient = async (req,res)=>{
-  const { email, firstName, lastName } = req.body
-    const password = generatePassword();
-
-    try {
-      const user = await prisma.user.findUnique({ where: { email } });
-      if (user) {
-        return res.status(400).json({ message: "El cliente ya fue creado." });
-      }
-      const passwordHash = await bcrypt.hash(password, 10);
-
-      const userSaved = await prisma.user.create({
-        data: {
-          password: passwordHash,
-          email,
-          firstName,
-          lastName
-        },
-      });
-      await prisma.userRoles.create({
-        data: {
-          userId: userSaved.id,
-          roleId: 2, // User default (Puede ser 1 si es admin)
-        },
-
+export const createClient = async (req, res) => {
+  const { email, firstName, lastName } = req.body;
+  const password = generatePassword();
 
   try {
     const user = await prisma.user.findUnique({ where: { email } });
     if (user) {
-      return res.status(400).json({ messsage: "User already exists" });
+      return res.status(400).json({ message: "El cliente ya fue creado." });
     }
     const passwordHash = await bcrypt.hash(password, 10);
 
@@ -244,7 +221,7 @@ export const reSendEmailClient = async (req, res) => {
 
   try {
     const user = await prisma.user.findUnique({ where: { email } });
-    console.log(user)
+    console.log(user);
     if (!user) {
       return res.status(404).json({ message: "User no exits" });
     }
@@ -256,16 +233,14 @@ export const reSendEmailClient = async (req, res) => {
       },
       data: {
         password: passwordHash,
-        verified:true
+        verified: true,
       },
     });
 
-    const id = user.id
-    sendEmailActivate(email, { email, password,id })
+    const id = user.id;
+    sendEmailActivate(email, { email, password, id });
 
-    return res.status(200).send({ ok: true })
-
-
+    return res.status(200).send({ ok: true });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Error al enviar el mail", ok: false });
@@ -341,8 +316,7 @@ export const POSTresetPassword = async (req, res) => {
       data: {
         password: passwordHash,
 
-        verified:true
-
+        verified: true,
       },
     });
 
