@@ -1,12 +1,10 @@
 import { Router } from "express";
 
-import { activate, desactivate, update } from "../controllers/user.controller.js";
+import { activate, desactivate, getUsers, update } from "../controllers/user.controller.js";
 
 const router = Router();
 
-router.get("/users", (req, res) => {
-  res.send("users");
-});
+router.get("/users",getUsers);
 
 router.put("/update/:id", update);
 router.put("/desactivate/:id", desactivate);

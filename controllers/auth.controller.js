@@ -168,7 +168,7 @@ export const createClient = async (req,res)=>{
     try {
       const user = await prisma.user.findUnique({ where: { email } });
       if (user) {
-        return res.status(400).json({ messsage: "User already exists" });
+        return res.status(400).json({ message: "El cliente ya fue creado." });
       }
       const passwordHash = await bcrypt.hash(password, 10);
 
@@ -223,6 +223,7 @@ export const reSendEmailClient = async (req, res) => {
 
   try {
     const user = await prisma.user.findUnique({ where: { email } });
+    console.log(user)
     if (!user) {
       return res.status(404).json({ message: "User no exits" });
     }
@@ -230,15 +231,16 @@ export const reSendEmailClient = async (req, res) => {
 
     await prisma.user.update({
       where: {
-        id: user.id,
+        email,
       },
       data: {
         password: passwordHash,
+        verified:true
       },
     });
-
-
+    const id = user.id
     sendEmailActivate(email, { email, password,id })
+
     return res.status(200).send({ ok: true })
 
   } catch (error) {
@@ -256,7 +258,7 @@ export const forgotPassword = async (req, res) => {
     }
     const secret = process.env.JWT_SECRET + oldUser.password;
     const token = jwt.sign({ email: oldUser.email, id: oldUser.id }, secret, {
-      expiresIn: "10m",
+      expiresIn: "1d",
     });
     const link = `${process.env.APIGATEWAY_URL}/api/auth/reset-password/${oldUser.id}/${token}`;
 
@@ -315,7 +317,7 @@ export const POSTresetPassword = async (req, res) => {
       },
       data: {
         password: passwordHash,
-        isActive:true
+        verified:true
       },
     });
 
