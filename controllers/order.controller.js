@@ -15,6 +15,28 @@ export const getOrders = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+export const getOrdersGeneral = async (req, res) => {
+  try {
+    const orders = await prisma.order.findMany({
+      select: {
+        id: true,
+        total: true,
+        observation: true,
+        orderState: true,
+        createdAt: true,
+        User: {
+          select: {
+            email: true,
+          },
+        },
+      },
+    });
+    res.json(orders);
+  } catch (error) {
+    console.error("Error getting orders:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
 
 export const getOrdersByUser = async (req, res) => {
   try {
@@ -95,5 +117,43 @@ export const cancelOrder = async (req, res) => {
   } catch (error) {
     console.error(error); // Log the error for debugging
     res.status(500).json({ error: "Error canceling order" });
+  }
+};
+
+export const getSpecificOrder = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const order = await prisma.order.findUnique({
+      where: {
+        id: Number(id),
+      },
+      select: {
+        total: true,
+        observation: true,
+        orderState: true,
+        detailOrder: {
+          select: {
+            quantity: true,
+            price: true,
+            Product: {
+              select: {
+                codeCompatibility: true,
+                priceSale: true,
+                description: true,
+              },
+            },
+          },
+        },
+        User: {
+          select: {
+            email: true,
+          },
+        },
+      },
+    });
+    res.json(order);
+  } catch (error) {
+    console.error("Error getting specific order:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
