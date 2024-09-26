@@ -14,24 +14,22 @@ datasource db {
 }
 
 model User {
-
-  id             Int            @id @default(autoincrement())
-  username       String?
-  password       String
-  firstName      String
-  lastName       String
-  email          String         @unique
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-  isActive       Boolean        @default(true)
+  id           Int            @id @default(autoincrement())
+  username     String?
+  password     String
+  firstName    String
+  lastName     String
+  email        String         @unique
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  isActive     Boolean        @default(true)
   // hasChangedPass Boolean        @default(false)
-  verified       Boolean        @default(false)
-  lastLogin      DateTime?
-  UserRoles      UserRoles[]
-  AuditLogs      AuditLogs[]
-  Order          Order[]
-  UserDiscount   UserDiscount[]
-
+  verified     Boolean        @default(false)
+  lastLogin    DateTime?
+  UserRoles    UserRoles[]
+  AuditLogs    AuditLogs[]
+  Order        Order[]
+  UserDiscount UserDiscount[]
 }
 
 model UserRoles {
@@ -80,15 +78,29 @@ model AuditLogs {
   User      User     @relation(fields: [userId], references: [id])
 }
 
+model Image {
+  id          Int        @id @default(autoincrement())
+  imageUrl    String     @db.VarChar(500)
+  title       String
+  categoryId  Int        // Nuevo campo
+  Category    Category   @relation(fields: [categoryId], references: [id])
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  Products    Products[]
+}
+
+
 model Products {
   id                Int               @id @default(autoincrement())
   codeCompatibility String
   priceSale         Float
-  image             String            @db.VarChar(500)
+  imageId           Int?
+  Image             Image?            @relation(fields: [imageId], references: [id])
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
   isActive          Boolean           @default(true)
   description       String
+  measure           String? // Medida especifica del producto
   Category          Category          @relation(fields: [categoryId], references: [id])
   categoryId        Int
   subCategory       subCategory       @relation(fields: [subCategoryId], references: [id])
@@ -98,14 +110,16 @@ model Products {
 }
 
 model Category {
-  id          Int           @id @default(autoincrement())
+  id          Int        @id @default(autoincrement())
   description String
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  isActive    Boolean       @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  isActive    Boolean    @default(true)
   Products    Products[]
   subCategory subCategory[]
+  Images      Image[]    // Relación implícita uno a muchos con Image
 }
+
 
 model subCategory {
   id          Int        @id @default(autoincrement())

@@ -6,7 +6,8 @@ import orderRoutes from "./routes/order.routes.js";
 import discountRoutes from "./routes/discount.routes.js";
 import app from "./app.js";
 
-
+import dotenv from "dotenv";
+dotenv.config();
 
 app.listen(3000);
 

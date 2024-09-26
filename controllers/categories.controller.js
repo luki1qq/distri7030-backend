@@ -69,7 +69,13 @@ export const getCategory = async (req, res) => {
 };
 export const getCategories = async (req, res) => {
   try {
-    const category = await prisma.category.findMany();
+    const category = await prisma.category.findMany({
+      select: {
+        id: true,
+        description: true,
+        isActive: true,
+      },
+    });
     res.json(category);
   } catch (error) {
     console.error("Error getting category:", error);
@@ -101,6 +107,167 @@ export const getSubCategory = async (req, res) => {
     res.json(subCategories);
   } catch (error) {
     console.error("Error getting subcategories:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+// export const getCatalogByCategory = async (req, res) => {
+//   try {
+//     const { categoryId } = req.params;
+
+//     // Consulta optimizada
+//     const products = await prisma.products.findMany({
+//       where: {
+//         categoryId: parseInt(categoryId), // Filtra por categoría
+//         imageId: { not: null }, // Solo productos con una imagen asociada
+//       },
+//       select: {
+//         imageId: true, // Selecciona el ID de la imagen (para evitar traer datos innecesarios de la relación)
+//       },
+//     });
+
+//     // filtrar productos con imagen repetida
+//     const uniqueProducts = products.filter(
+//       (product, index, self) =>
+//         index === self.findIndex((t) => t.imageId === product.imageId)
+//     );
+
+//     // obtener titulo y descripcion de la imagen
+//     const ImageOfProducts = await prisma.image.findMany({
+//       where: {
+//         id: {
+//           in: uniqueProducts.map((product) => product.imageId),
+//         },
+//       },
+//       select: {
+//         id: true,
+//         title: true,
+//         imageUrl: true,
+//       },
+//     });
+
+//     res.json(ImageOfProducts);
+//   } catch (error) {
+//     console.error("Error getting products:", error);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// };
+
+export const getImagesByCategory = async (req, res) => {
+  try {
+    const { categoryId } = req.params;
+    if (!categoryId) {
+      return res.status(400).json({ error: "Category ID is required" });
+    }
+    const images = await prisma.image.findMany({
+      where: {
+        categoryId: parseInt(categoryId), // ID de la categoría seleccionada
+      },
+      select: {
+        id: true,
+        title: true,
+        imageUrl: true,
+        categoryId: true,
+      },
+    });
+    res.json(images);
+  } catch (error) {
+    console.error("Error getting products:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const getProductSelectedByImage = async (req, res) => {
+  try {
+    const { imageId } = req.params;
+
+    if (!imageId) {
+      return res.status(400).json({ error: "image ID is required" });
+    }
+
+    const products = await prisma.products.findMany({
+      where: {
+        imageId: parseInt(imageId), // ID de la imagen seleccionada
+      },
+      select: {
+        id: true,
+        codeCompatibility: true,
+        priceSale: true,
+        description: true,
+        Category: {
+          select: {
+            description: true, // Obtener el nombre de la categoría (campo description)
+          },
+        },
+        subCategory: {
+          select: {
+            description: true, // Obtener el nombre de la subcategoría (campo description)
+          },
+        },
+      },
+    });
+
+    if (!products) {
+      return res.status(404).json({ error: "Products not found" });
+    }
+
+    res.json(products);
+  } catch (error) {
+    console.error("Error getting product:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const getProductsByImage = async (req, res) => {
+  try {
+    const { imageId } = req.params;
+
+    if (!imageId) {
+      return res.status(400).json({ error: "Image ID is required" });
+    }
+    const products = await prisma.products.findMany({
+      where: { imageId: parseInt(imageId) },
+      select: {
+        codeCompatibility: true,
+        description: true,
+        measure: true,
+      },
+    });
+    res.json(products);
+  } catch (error) {
+    console.error("Error getting products:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const getImageInfo = async (req, res) => {
+  try {
+    const { imageId } = req.params;
+
+    if (!imageId) {
+      return res.status(400).json({ error: "Image ID is required" });
+    }
+    const image = await prisma.image.findUnique({
+      where: { id: parseInt(imageId) },
+    });
+    res.json(image);
+  } catch (error) {
+    console.error("Error getting image info:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const getProductByCategory = async (req, res) => {
+  try {
+    const { categoryId } = req.params;
+    const products = await prisma.products.findMany({
+      where: {
+        categoryId: parseInt(categoryId),
+      },
+    });
+    res.json(products);
+  } catch (error) {
+    console.error("Error getting products:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };

@@ -12,6 +12,22 @@ export const getDiscounts = async (req, res) => {
   }
 };
 
+export const getDiscount = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const discount = await prisma.discount.findUnique({
+      where: {
+        id: parseInt(id),
+      },
+    });
+    res.json(discount);
+  } catch (error) {
+    console.error("Error getting discounts:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
 export const getDiscountsByProduct = async (req, res) => {
   try {
     const { productId } = req.params;
@@ -168,6 +184,43 @@ export const getAllProductsByDiscountByUser = async (req, res) => {
     );
 
     res.json(products);
+  } catch (error) {
+    console.error("Error getting discounts:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const associateManyUsersToDiscount = async (req, res) => {
+  try {
+    const { userIds, discountId } = req.body;
+    // Validate input
+
+    console.log(userIds);
+    console.log(discountId);
+
+    if (!discountId || !userIds) {
+      return res.status(400).json(["fqefqe"]);
+    }
+
+    // Create discount in the database
+    const resultDiscount = await prisma.userDiscount.createMany({
+      data: userIds.map((userId) => ({
+        userId: Number(userId.id),
+        discountId: Number(discountId),
+      })),
+    });
+
+    res.json(resultDiscount);
+  } catch (error) {
+    console.error("Error creating discount:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const getDiscountsUsers = async (req, res) => {  
+  try {
+    const discounts = await prisma.userDiscount.findMany();
+    res.json(discounts);
   } catch (error) {
     console.error("Error getting discounts:", error);
     res.status(500).json({ error: "Internal server error" });
