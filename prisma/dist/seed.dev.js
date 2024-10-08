@@ -1,6 +1,5 @@
 // import { PrismaClient } from "@prisma/client";
 // const prisma = new PrismaClient();
-
 // async function main() {
 //   const category = await prisma.category.create({
 //     data: {
@@ -15,7 +14,6 @@
 //     },
 //   });
 //   console.log({ subCategory });
-
 //   const product = await prisma.products.create({
 //     data: {
 //       codeCompatibility: "QUI57",
@@ -38,3 +36,4 @@
 //     await prisma.$disconnect();
 //     process.exit(1);
 //   });
+"use strict";

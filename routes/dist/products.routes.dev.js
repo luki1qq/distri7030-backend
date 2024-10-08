@@ -29,6 +29,7 @@ router.get("/get-product/:id", _productsController.getProduct);
 router.get("/get-products-by-category/:categoryId", _productsController.getProductsByCategory);
 router["delete"]("/delete-product/:id", _validateToken.authRequired, _validateRol.isAdmin, _productsController.deleteProduct);
 router.post("/create-image-by-category", _upload.upload.single("image"), _productsController.createImage);
+router.post("/create-image", _productsController.createImageAsociatedAtURL);
 router.post("/upload", _upload.upload.single("image"), function _callee(req, res) {
   var file, params, command, imageUrl, newImage;
   return regeneratorRuntime.async(function _callee$(_context) {
@@ -81,6 +82,57 @@ router.post("/upload", _upload.upload.single("image"), function _callee(req, res
         case 18:
         case "end":
           return _context.stop();
+      }
+    }
+  }, null, null, [[0, 14]]);
+});
+router.get("/get-images-s3", function _callee2(req, res) {
+  var bucketName, folderPrefix, params, command, data, permanentLinks;
+  return regeneratorRuntime.async(function _callee2$(_context2) {
+    while (1) {
+      switch (_context2.prev = _context2.next) {
+        case 0:
+          _context2.prev = 0;
+          bucketName = process.env.AWS_BUCKET_NAME; // Asegúrate de obtener el nombre del bucket correctamente
+
+          folderPrefix = "nombre-de-la-carpeta/"; // Prefijo opcional, si deseas listar en una carpeta
+
+          params = {
+            Bucket: bucketName // Prefix: folderPrefix, // Si estás buscando dentro de una subcarpeta
+
+          };
+          command = new _clientS.ListObjectsV2Command(params);
+          _context2.next = 7;
+          return regeneratorRuntime.awrap(_upload.s3.send(command));
+
+        case 7:
+          data = _context2.sent;
+          // Crear los enlaces permanentes
+          permanentLinks = data.Contents.map(function (item) {
+            var url = "https://".concat(bucketName, ".s3.").concat(process.env.AWS_REGION, ".amazonaws.com/").concat(item.Key);
+            return {
+              key: item.Key,
+              url: url
+            };
+          });
+          console.log("Enlaces permanentes de los objetos en S3:");
+          permanentLinks.forEach(function (link) {
+            return console.log(link);
+          });
+          res.json({
+            links: permanentLinks
+          });
+          _context2.next = 17;
+          break;
+
+        case 14:
+          _context2.prev = 14;
+          _context2.t0 = _context2["catch"](0);
+          console.error("Error al listar objetos en S3:", _context2.t0);
+
+        case 17:
+        case "end":
+          return _context2.stop();
       }
     }
   }, null, null, [[0, 14]]);

@@ -8,8 +8,11 @@ import app from "./app.js";
 
 import dotenv from "dotenv";
 dotenv.config();
-
-app.listen(3000);
+const PORT = process.env.PORT || 3000;
+const HOST = process.env.HOST || "0.0.0.0";
+app.listen(PORT, HOST, () => {
+  console.log(`Servidor corriendo en http://${HOST}:${PORT}`);
+});
 
 app.use("/api/products", productsRoutes);
 app.use("/api/users", usersRoutes);

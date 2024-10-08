@@ -55,13 +55,14 @@ export const login = async (req, res) => {
   const isAdmin = userFound.UserRoles.some(
     (userRole) => userRole.RoleTable.name === RoleTable.ADMIN
   );
-
+  const isSecure = req.secure || req.headers["x-forwarded-proto"] === "https"; // Verificar si la solicitud es HTTPS
+  console.log(isSecure);
   const token = await createAccessToken({ id: userFound.id });
   console.log(token);
   res.cookie("token", token, {
-    sameSite: "none",
-    secure: true,
-    httpOnly: false,
+    httpOnly: false, // No accesible desde JavaScript del frontend
+    secure: isSecure, // Solo enviar en HTTPS en producción
+    sameSite: isSecure ? "None" : "Lax", // 'None' si está en HTTPS, de lo contrario 'Lax' (para desarrollo HTTP)
   });
   res.json({
     id: userFound.id,

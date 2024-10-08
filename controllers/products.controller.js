@@ -211,3 +211,27 @@ export const deleteProduct = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+
+export const createImageAsociatedAtURL = async (req, res) => {
+  try {
+    const { title, imageUrl, categoryId } = req.body;
+
+    if (!title || !imageUrl || !categoryId) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    const newImage = await prisma.image.create({
+      data: {
+        title,
+        imageUrl,
+        categoryId,
+      },
+    });
+
+    res.status(200).json(newImage);
+  } catch (error) {
+    console.error("Error creating image:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}

@@ -3,21 +3,58 @@ const prisma = new PrismaClient();
 
 export const getOrders = async (req, res) => {
   try {
+    // Obtener los parámetros de paginación desde la URL o definir valores predeterminados
+    const page = parseInt(req.query.page) || 1; // Página actual (por defecto 1)
+    const limit = parseInt(req.query.limit) || 10; // Número de resultados por página (por defecto 10)
+
+    // Calcular cuántos registros omitir (skip) basado en la página actual y el límite
+    const skip = (page - 1) * limit;
+
+    // Consulta Prisma con paginación
     const orders = await prisma.order.findMany({
       where: {
         userId: req.user.id,
         isActive: true,
       },
+      skip: skip, // Omitir el número de registros calculados
+      take: limit, // Traer solo el número de registros indicados en "limit"
     });
-    res.json(orders);
+
+    // Contar el número total de órdenes activas para este usuario
+    const totalOrders = await prisma.order.count({
+      where: {
+        userId: req.user.id,
+        isActive: true,
+      },
+    });
+
+    // Devolver los datos paginados junto con el número total de páginas
+    res.json({
+      page: page,
+      limit: limit,
+      totalPages: Math.ceil(totalOrders / limit),
+      totalOrders: totalOrders,
+      orders: orders,
+    });
   } catch (error) {
-    console.error("Error getting products:", error);
+    console.error("Error getting orders:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
 export const getOrdersGeneral = async (req, res) => {
   try {
+    // Obtener los parámetros de paginación desde la consulta o definir valores predeterminados
+    const page = parseInt(req.query.page) || 1; // Página actual (por defecto 1)
+    const limit = parseInt(req.query.limit) || 10; // Número de resultados por página (por defecto 10)
+
+    // Calcular cuántos registros omitir (skip) basado en la página actual y el límite
+    const skip = (page - 1) * limit;
+
+    // Consulta Prisma con paginación
     const orders = await prisma.order.findMany({
+      skip: skip, // Omitir el número de registros calculados
+      take: limit, // Limitar el número de registros a devolver
       select: {
         id: true,
         total: true,
@@ -31,7 +68,18 @@ export const getOrdersGeneral = async (req, res) => {
         },
       },
     });
-    res.json(orders);
+
+    // Contar el número total de órdenes
+    const totalOrders = await prisma.order.count();
+
+    // Devolver los datos paginados junto con el número total de páginas
+    res.json({
+      page: page,
+      limit: limit,
+      totalPages: Math.ceil(totalOrders / limit),
+      totalOrders: totalOrders,
+      orders: orders,
+    });
   } catch (error) {
     console.error("Error getting orders:", error);
     res.status(500).json({ error: "Internal server error" });

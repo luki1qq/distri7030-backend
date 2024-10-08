@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.deleteProduct = exports.getProduct = exports.getProductsByCategory = exports.getProductsWithDiscount = exports.getProducts = exports.createImage = exports.createProductWithImage = exports.createProduct = void 0;
+exports.createImageAsociatedAtURL = exports.deleteProduct = exports.getProduct = exports.getProductsByCategory = exports.getProductsWithDiscount = exports.getProducts = exports.createImage = exports.createProductWithImage = exports.createProduct = void 0;
 
 var _client = require("@prisma/client");
 
@@ -432,3 +432,56 @@ var deleteProduct = function deleteProduct(req, res) {
 };
 
 exports.deleteProduct = deleteProduct;
+
+var createImageAsociatedAtURL = function createImageAsociatedAtURL(req, res) {
+  var _req$body3, title, imageUrl, categoryId, newImage;
+
+  return regeneratorRuntime.async(function createImageAsociatedAtURL$(_context9) {
+    while (1) {
+      switch (_context9.prev = _context9.next) {
+        case 0:
+          _context9.prev = 0;
+          _req$body3 = req.body, title = _req$body3.title, imageUrl = _req$body3.imageUrl, categoryId = _req$body3.categoryId;
+
+          if (!(!title || !imageUrl || !categoryId)) {
+            _context9.next = 4;
+            break;
+          }
+
+          return _context9.abrupt("return", res.status(400).json({
+            error: "Missing required fields"
+          }));
+
+        case 4:
+          _context9.next = 6;
+          return regeneratorRuntime.awrap(prisma.image.create({
+            data: {
+              title: title,
+              imageUrl: imageUrl,
+              categoryId: categoryId
+            }
+          }));
+
+        case 6:
+          newImage = _context9.sent;
+          res.status(200).json(newImage);
+          _context9.next = 14;
+          break;
+
+        case 10:
+          _context9.prev = 10;
+          _context9.t0 = _context9["catch"](0);
+          console.error("Error creating image:", _context9.t0);
+          res.status(500).json({
+            error: "Internal server error"
+          });
+
+        case 14:
+        case "end":
+          return _context9.stop();
+      }
+    }
+  }, null, null, [[0, 10]]);
+};
+
+exports.createImageAsociatedAtURL = createImageAsociatedAtURL;

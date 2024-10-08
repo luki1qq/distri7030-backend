@@ -18,8 +18,8 @@ import {
 
 const prisma = new PrismaClient();
 const router = Router();
-router.post("/create-subcategory", authRequired, createSubCategory);
-router.post("/create-category", authRequired, createCategory);
+router.post("/create-subcategory",  createSubCategory);
+router.post("/create-category",authRequired,  createCategory);
 router.get("/get-categories", getCategories);
 router.get("/get-product-by-category/:categoryId", getProductByCategory);
 router.get("/get-category/:id", getCategory);

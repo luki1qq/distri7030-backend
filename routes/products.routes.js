@@ -9,10 +9,15 @@ import {
   deleteProduct,
   getProductsByCategory,
   createImage,
+  createImageAsociatedAtURL,
 } from "../controllers/products.controller.js";
 import { authRequired } from "../middlewares/validateToken.js";
 import { upload, s3 } from "../middlewares/upload.js";
-import { PutObjectCommand } from "@aws-sdk/client-s3";
+import {
+  PutObjectCommand,
+  ListObjectsV2Command,
+  S3Client,
+} from "@aws-sdk/client-s3";
 import { isAdmin } from "../middlewares/validateRol.js";
 
 const prisma = new PrismaClient();
@@ -24,13 +29,14 @@ router.post(
   upload.single("image"),
   createProductWithImage
 );
-router.post("/create-products")
+router.post("/create-products");
 
 router.get("/get-products", getProducts);
 router.get("/get-product/:id", getProduct);
 router.get("/get-products-by-category/:categoryId", getProductsByCategory);
 router.delete("/delete-product/:id", authRequired, isAdmin, deleteProduct);
 router.post("/create-image-by-category", upload.single("image"), createImage);
+router.post("/create-image", createImageAsociatedAtURL);
 router.post("/upload", upload.single("image"), async (req, res) => {
   try {
     console.log(req.body);
@@ -63,6 +69,34 @@ router.post("/upload", upload.single("image"), async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error al subir la imagen" });
+  }
+});
+
+router.get("/get-images-s3", async (req,res) => {
+  try {
+    const bucketName = process.env.AWS_BUCKET_NAME; // Asegúrate de obtener el nombre del bucket correctamente
+    const folderPrefix = "nombre-de-la-carpeta/"; // Prefijo opcional, si deseas listar en una carpeta
+
+    const params = {
+      Bucket: bucketName,
+      // Prefix: folderPrefix, // Si estás buscando dentro de una subcarpeta
+    };
+
+    const command = new ListObjectsV2Command(params);
+    const data = await s3.send(command);
+
+    // Crear los enlaces permanentes
+    const permanentLinks = data.Contents.map((item) => {
+      const url = `https://${bucketName}.s3.${process.env.AWS_REGION}.amazonaws.com/${item.Key}`;
+      return { key: item.Key, url };
+    });
+
+    console.log("Enlaces permanentes de los objetos en S3:");
+    permanentLinks.forEach((link) => console.log(link));
+
+    res.json({ links: permanentLinks });
+  } catch (error) {
+    console.error("Error al listar objetos en S3:", error);
   }
 });
 export default router;

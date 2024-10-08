@@ -15,7 +15,7 @@ var _categoriesController = require("../controllers/categories.controller.js");
 
 var prisma = new _client.PrismaClient();
 var router = (0, _express.Router)();
-router.post("/create-subcategory", _validateToken.authRequired, _categoriesController.createSubCategory);
+router.post("/create-subcategory", _categoriesController.createSubCategory);
 router.post("/create-category", _validateToken.authRequired, _categoriesController.createCategory);
 router.get("/get-categories", _categoriesController.getCategories);
 router.get("/get-product-by-category/:categoryId", _categoriesController.getProductByCategory);

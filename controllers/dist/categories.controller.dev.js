@@ -16,10 +16,11 @@ var createCategory = function createCategory(req, res) {
       switch (_context.prev = _context.next) {
         case 0:
           _context.prev = 0;
-          description = req.body.description; // Validación de datos
+          description = req.body.description;
+          console.log(description); // Validación de datos
 
           if (description) {
-            _context.next = 4;
+            _context.next = 5;
             break;
           }
 
@@ -27,47 +28,47 @@ var createCategory = function createCategory(req, res) {
             error: "Description is required"
           }));
 
-        case 4:
-          _context.next = 6;
+        case 5:
+          _context.next = 7;
           return regeneratorRuntime.awrap(prisma.category.create({
             data: {
               description: description
             }
           }));
 
-        case 6:
+        case 7:
           category = _context.sent;
           res.status(200).json(category);
-          _context.next = 14;
+          _context.next = 15;
           break;
 
-        case 10:
-          _context.prev = 10;
+        case 11:
+          _context.prev = 11;
           _context.t0 = _context["catch"](0);
           console.error("Error creating category:", _context.t0);
           res.status(500).json({
             error: "Internal server error"
           });
 
-        case 14:
+        case 15:
         case "end":
           return _context.stop();
       }
     }
-  }, null, null, [[0, 10]]);
+  }, null, null, [[0, 11]]);
 };
 
 exports.createCategory = createCategory;
 
 var createSubCategory = function createSubCategory(req, res) {
-  var _req$body, description, categoryId, categoryExists, subCategory;
+  var _req$body, id, description, categoryId, categoryExists, subCategory;
 
   return regeneratorRuntime.async(function createSubCategory$(_context2) {
     while (1) {
       switch (_context2.prev = _context2.next) {
         case 0:
           _context2.prev = 0;
-          _req$body = req.body, description = _req$body.description, categoryId = _req$body.categoryId; // Validación básica
+          _req$body = req.body, id = _req$body.id, description = _req$body.description, categoryId = _req$body.categoryId; // Validación básica
 
           if (!(!description || !categoryId)) {
             _context2.next = 4;
@@ -102,6 +103,7 @@ var createSubCategory = function createSubCategory(req, res) {
           _context2.next = 11;
           return regeneratorRuntime.awrap(prisma.subCategory.create({
             data: {
+              id: id,
               description: description,
               categoryId: categoryId
             }
@@ -338,12 +340,13 @@ var getSubCategory = function getSubCategory(req, res) {
 //     res.status(500).json({ error: "Internal server error" });
 //   }
 // };
+//that is ok
 
 
 exports.getSubCategory = getSubCategory;
 
 var getImagesByCategory = function getImagesByCategory(req, res) {
-  var categoryId, images;
+  var categoryId, page, limit, skip, images, totalImages;
   return regeneratorRuntime.async(function getImagesByCategory$(_context7) {
     while (1) {
       switch (_context7.prev = _context7.next) {
@@ -361,12 +364,24 @@ var getImagesByCategory = function getImagesByCategory(req, res) {
           }));
 
         case 4:
-          _context7.next = 6;
+          // Obtener los parámetros de paginación desde la consulta o usar valores predeterminados
+          page = parseInt(req.query.page) || 1; // Página actual (por defecto 1)
+
+          limit = parseInt(req.query.limit) || 10; // Número de resultados por página (por defecto 10)
+          // Calcular cuántos registros omitir (skip) basado en la página actual y el límite
+
+          skip = (page - 1) * limit; // Consulta Prisma con paginación
+
+          _context7.next = 9;
           return regeneratorRuntime.awrap(prisma.image.findMany({
             where: {
               categoryId: parseInt(categoryId) // ID de la categoría seleccionada
 
             },
+            skip: skip,
+            // Omitir el número de registros calculados
+            take: limit,
+            // Traer solo el número de registros indicados en "limit"
             select: {
               id: true,
               title: true,
@@ -375,26 +390,43 @@ var getImagesByCategory = function getImagesByCategory(req, res) {
             }
           }));
 
-        case 6:
+        case 9:
           images = _context7.sent;
-          res.json(images);
-          _context7.next = 14;
+          _context7.next = 12;
+          return regeneratorRuntime.awrap(prisma.image.count({
+            where: {
+              categoryId: parseInt(categoryId) // Contar solo en la categoría seleccionada
+
+            }
+          }));
+
+        case 12:
+          totalImages = _context7.sent;
+          // Devolver los datos paginados junto con el número total de páginas
+          res.json({
+            page: page,
+            limit: limit,
+            totalPages: Math.ceil(totalImages / limit),
+            totalImages: totalImages,
+            images: images
+          });
+          _context7.next = 20;
           break;
 
-        case 10:
-          _context7.prev = 10;
+        case 16:
+          _context7.prev = 16;
           _context7.t0 = _context7["catch"](0);
           console.error("Error getting products:", _context7.t0);
           res.status(500).json({
             error: "Internal server error"
           });
 
-        case 14:
+        case 20:
         case "end":
           return _context7.stop();
       }
     }
-  }, null, null, [[0, 10]]);
+  }, null, null, [[0, 16]]);
 };
 
 exports.getImagesByCategory = getImagesByCategory;

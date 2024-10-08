@@ -4,14 +4,16 @@ const prisma = new PrismaClient();
 export const createCategory = async (req, res) => {
   try {
     const { description } = req.body;
-
+    console.log(description);
     // Validación de datos
     if (!description) {
       return res.status(400).json({ error: "Description is required" });
     }
 
     const category = await prisma.category.create({
-      data: { description },
+      data: {
+        description: description,
+      },
     });
 
     res.status(200).json(category);
@@ -22,7 +24,7 @@ export const createCategory = async (req, res) => {
 };
 export const createSubCategory = async (req, res) => {
   try {
-    const { description, categoryId } = req.body;
+    const { id, description, categoryId } = req.body;
 
     // Validación básica
     if (!description || !categoryId) {
@@ -41,7 +43,8 @@ export const createSubCategory = async (req, res) => {
     }
 
     const subCategory = await prisma.subCategory.create({
-      data: { description, categoryId },
+      data: { 
+        id, description, categoryId },
     });
 
     res.status(200).json(subCategory);
@@ -153,16 +156,30 @@ export const getSubCategory = async (req, res) => {
 //   }
 // };
 
+//that is ok
 export const getImagesByCategory = async (req, res) => {
   try {
     const { categoryId } = req.params;
+
     if (!categoryId) {
       return res.status(400).json({ error: "Category ID is required" });
     }
+
+    // Obtener los parámetros de paginación desde la consulta o usar valores predeterminados
+    const page = parseInt(req.query.page) || 1; // Página actual (por defecto 1)
+
+    const limit = parseInt(req.query.limit) || 10; // Número de resultados por página (por defecto 10)
+
+    // Calcular cuántos registros omitir (skip) basado en la página actual y el límite
+    const skip = (page - 1) * limit;
+
+    // Consulta Prisma con paginación
     const images = await prisma.image.findMany({
       where: {
         categoryId: parseInt(categoryId), // ID de la categoría seleccionada
       },
+      skip: skip, // Omitir el número de registros calculados
+      take: limit, // Traer solo el número de registros indicados en "limit"
       select: {
         id: true,
         title: true,
@@ -170,7 +187,22 @@ export const getImagesByCategory = async (req, res) => {
         categoryId: true,
       },
     });
-    res.json(images);
+
+    // Contar el número total de imágenes en esa categoría para calcular las páginas totales
+    const totalImages = await prisma.image.count({
+      where: {
+        categoryId: parseInt(categoryId), // Contar solo en la categoría seleccionada
+      },
+    });
+
+    // Devolver los datos paginados junto con el número total de páginas
+    res.json({
+      page: page,
+      limit: limit,
+      totalPages: Math.ceil(totalImages / limit),
+      totalImages: totalImages,
+      images: images,
+    });
   } catch (error) {
     console.error("Error getting products:", error);
     res.status(500).json({ error: "Internal server error" });
