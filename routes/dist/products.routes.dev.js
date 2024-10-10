@@ -22,8 +22,10 @@ var _validateRol = require("../middlewares/validateRol.js");
 // import { prisma } from "../db.js";
 var prisma = new _client.PrismaClient();
 var router = (0, _express.Router)();
-router.post("/create-product-with-image", _validateToken.authRequired, _upload.upload.single("image"), _productsController.createProductWithImage);
-router.post("/create-products");
+router.post("/create-product-with-image", _validateToken.authRequired, _upload.upload.single("image"), _productsController.createProductWithImage); // Usados con el runner
+
+router.post("/create-products", _productsController.createProduct);
+router.post("/create-images-link", _productsController.createImageLink);
 router.get("/get-products", _productsController.getProducts);
 router.get("/get-product/:id", _productsController.getProduct);
 router.get("/get-products-by-category/:categoryId", _productsController.getProductsByCategory);

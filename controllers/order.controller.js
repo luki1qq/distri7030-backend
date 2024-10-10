@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
+import { sendEmail } from "../utils/transporterNodeMailer.js";
 
 export const getOrders = async (req, res) => {
   try {
@@ -108,11 +109,18 @@ export const createOrder = async (req, res) => {
   try {
     const { detailOrder } = req.body;
     console.log(detailOrder);
-    // return res.status(201).json(detailOrder);
+
     // Validate input
     if (!req.user.id || !detailOrder || !Array.isArray(detailOrder)) {
       return res.status(400).json(["Invalid input data"]);
     }
+
+    const user = await prisma.user.findUnique({
+      where: {
+        id: req.user.id,
+      },
+    });
+
     // Calculate total based on detailOrder items
     const total = detailOrder.reduce((acc, item) => {
       if (
@@ -142,8 +150,130 @@ export const createOrder = async (req, res) => {
           })),
         },
       },
-      include: { detailOrder: true }, // Include detailOrder in the result
+      include: {
+        detailOrder: {
+          include: {
+            Product: {
+              select: {
+                codeCompatibility: true, // Get the codeCompatibility
+              },
+            },
+          },
+        },
+      }, // Include detailOrder with product details
     });
+
+    console.log(resultOrder);
+
+    // Limit to 5 products in the email
+    const limitedOrderDetails = resultOrder.detailOrder.slice(0, 5);
+
+    const emailTemplate = `
+    <!DOCTYPE html>
+    <html lang="es">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Resumen de Pedido</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+          }
+          .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+          }
+          h1 {
+            color: #ff6f00;
+          }
+          .order-summary {
+            margin-top: 20px;
+          }
+          .order-summary th, .order-summary td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+          }
+          .total {
+            font-weight: bold;
+            color: #ff6f00;
+            text-align: right;
+          }
+          .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 12px;
+            color: #777;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <h1>Nuevo Pedido</h1>
+          <p>Estimado <strong>${user.firstName} ${user.lastName}</strong>,</p>
+          <p>Gracias por tu pedido. A continuación, te presentamos el resumen del pedido realizado:</p>
+
+          <h2>Detalles del Pedido</h2>
+          <table class="order-summary" width="100%">
+            <thead>
+              <tr>
+                <th>Producto (Código de Compatibilidad)</th>
+                <th>Cantidad</th>
+                <th>Precio Unitario</th>
+                <th>Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${limitedOrderDetails
+                .map(
+                  (detail) => `
+                <tr>
+                  <td>${detail.Product.codeCompatibility}</td>
+                  <td>${detail.quantity}</td>
+                  <td>$${detail.price.toFixed(2)}</td>
+                  <td>$${(detail.price * detail.quantity).toFixed(2)}</td>
+                </tr>
+              `
+                )
+                .join("")}
+              <tr>
+                <td colspan="3" class="total">Total:</td>
+                <td class="total">$${resultOrder.total.toFixed(2)}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>Observaciones: ${
+            resultOrder.observation || "Sin observaciones"
+          }</h3>
+
+          <p>Estado del pedido: <strong>${resultOrder.orderState}</strong></p>
+
+          <div class="footer">
+            <p>© 2024 Distri7030. Todos los derechos reservados.</p>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+
+    // Send email to user and admin
+    sendEmail(
+      user.email,
+      `RESUMEN DE TU PEDIDO ${resultOrder.id}`,
+      emailTemplate
+    );
+    sendEmail(
+      process.env.MAIL_ADRESS_ADDRESS,
+      `NUEVO PEDIDO: ${resultOrder.id}`,
+      emailTemplate
+    );
 
     res.status(201).json(resultOrder);
   } catch (error) {

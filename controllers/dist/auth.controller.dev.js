@@ -616,7 +616,7 @@ var forgotPassword = function forgotPassword(req, res) {
           }
 
           return _context10.abrupt("return", res.status(404).json({
-            message: "User no exits"
+            message: "User no exists"
           }));
 
         case 7:
@@ -627,8 +627,9 @@ var forgotPassword = function forgotPassword(req, res) {
           }, secret, {
             expiresIn: "1d"
           });
-          link = "".concat(process.env.APIGATEWAY_URL, "/api/auth/reset-password/").concat(oldUser.id, "/").concat(token);
-          (0, _transporterNodeMailer.sendEmail)(email, "RESETEA TU CONSTRASEÑA", "<p>Resetea tu contrase\xF1a haciendo click en el boton verde. Si no solicitaste un reseteo ignora este mail. </p> \n            <a href=\"".concat(link, "\" style=\"display: inline-block; margin-top: 20px; padding: 10px 20px; background-color: #4CAF50; color: #fff; text-decoration: none; border-radius: 5px; font-size: 16px;\">RESETEAR CONTRASE\xD1A</a>"));
+          link = "".concat(process.env.APIGATEWAY_URL, "/api/auth/reset-password/").concat(oldUser.id, "/").concat(token); // Enviar el email con la plantilla mejorada
+
+          (0, _transporterNodeMailer.sendEmail)(email, "Resetea tu Contraseña", "\n      <!DOCTYPE html>\n      <html lang=\"es\">\n        <head>\n          <meta charset=\"UTF-8\" />\n          <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n          <title>Resetear Contrase\xF1a</title>\n          <style>\n            body {\n              font-family: Arial, sans-serif;\n              background-color: #f4f4f4;\n              color: #333;\n              margin: 0;\n              padding: 0;\n            }\n            .container {\n              max-width: 600px;\n              margin: 0 auto;\n              padding: 20px;\n              background-color: #333;\n              border-radius: 8px;\n            }\n            .header {\n              text-align: center;\n              padding: 10px 0;\n              background-color: #ff6f00;\n              color: white;\n              border-radius: 8px 8px 0 0;\n            }\n            .content {\n              padding: 20px;\n              background-color: #fff;\n              border-radius: 0 0 8px 8px;\n            }\n            .button {\n              display: block;\n              width: 100%;\n              max-width: 250px;\n              margin: 20px auto;\n              padding: 15px;\n              background-color: #ff6f00;\n              color: white !important;\n              text-align: center;\n              text-decoration: none;\n              border-radius: 4px;\n              font-weight: bold;\n              font-size: 16px;\n              cursor: pointer;\n            }\n            .button:hover {\n              background-color: #e65d00; /* Hacer m\xE1s oscuro al pasar el cursor */\n            }\n            .content p{\n              color: #000 !important;\n            }\n            .footer {\n              text-align: center;\n              margin-top: 30px;\n              color: #999;\n            }\n          </style>\n        </head>\n        <body>\n          <div class=\"container\">\n            <div class=\"header\">\n              <h1>Resetear tu Contrase\xF1a</h1>\n            </div>\n            <div class=\"content\">\n              <p>Hola,</p>\n              <p>Has solicitado un reseteo de contrase\xF1a para tu cuenta. Por favor, haz clic en el bot\xF3n de abajo para restablecer tu contrase\xF1a.</p>\n              <a href=\"".concat(link, "\" class=\"button\" target=\"_blank\">RESETEAR CONTRASE\xD1A</a>\n              <p>Si no solicitaste un reseteo de contrase\xF1a, simplemente ignora este correo.</p>\n              <p>Gracias,</p>\n              <p>El equipo de Distri7030</p>\n            </div>\n            <div class=\"footer\">\n              <p>\xA9 2024 Distri7030. Todos los derechos reservados.</p>\n            </div>\n          </div>\n        </body>\n      </html>\n      "));
           res.status(200).send({
             ok: true
           });

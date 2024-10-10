@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -7,8 +8,9 @@
   <title>Contraseña Establecida con Éxito</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f4f9;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #333;
+      /* Fondo oscuro */
       display: flex;
       justify-content: center;
       align-items: center;
@@ -19,42 +21,65 @@
     .container {
       text-align: center;
       background-color: #fff;
-      padding: 20px;
+      padding: 30px;
       border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      width: 300px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+      width: 400px;
     }
 
     h2 {
-      color: #4CAF50;
+      color: #ff6f00;
+      /* Color de título en naranja */
       margin-bottom: 20px;
     }
 
     p {
       font-size: 18px;
-      color: #333;
+      color: #666;
+      margin-bottom: 20px;
     }
 
     .button {
-      background-color: #4CAF50;
+      background-color: #ff6f00;
+      /* Color de botón en naranja */
       color: white;
       border: none;
-      padding: 10px 20px;
+      padding: 15px 30px;
       text-align: center;
       text-decoration: none;
-      display: inline-block;
       font-size: 16px;
-      margin-top: 10px;
+      margin-top: 20px;
       border-radius: 4px;
       cursor: pointer;
       transition: background-color 0.3s ease;
     }
 
     .button:hover {
-      background-color: #45a049;
+      background-color: #e65d00;
+      /* Botón más oscuro al pasar el cursor */
+    }
+
+    /* Estilo adicional para el botón en estado de foco */
+    .button:focus {
+      outline: none;
+      box-shadow: 0 0 5px rgba(255, 111, 0, 0.5);
+    }
+
+    /* Adaptación para pantallas pequeñas */
+    @media (max-width: 768px) {
+      .container {
+        width: 90%;
+        padding: 20px;
+      }
+
+      .button {
+        width: 100%;
+        /* Asegura que el botón ocupe todo el ancho en pantallas pequeñas */
+      }
     }
   </style>
 </head>
+
 <body>
   <div class="container">
     <h2>Contraseña cambiada con éxito</h2>
@@ -62,4 +87,5 @@
     <a href="http://localhost:5173/" class="button">Ir a la Página Principal</a>
   </div>
 </body>
+
 </html>

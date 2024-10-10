@@ -253,19 +253,101 @@ export const forgotPassword = async (req, res) => {
   try {
     const oldUser = await prisma.user.findUnique({ where: { email } });
     if (!oldUser) {
-      return res.status(404).json({ message: "User no exits" });
+      return res.status(404).json({ message: "User no exists" });
     }
+
     const secret = process.env.JWT_SECRET + oldUser.password;
     const token = jwt.sign({ email: oldUser.email, id: oldUser.id }, secret, {
       expiresIn: "1d",
     });
     const link = `${process.env.APIGATEWAY_URL}/api/auth/reset-password/${oldUser.id}/${token}`;
 
+    // Enviar el email con la plantilla mejorada
     sendEmail(
       email,
-      "RESETEA TU CONSTRASEÑA",
-      `<p>Resetea tu contraseña haciendo click en el boton verde. Si no solicitaste un reseteo ignora este mail. </p> 
-            <a href="${link}" style="display: inline-block; margin-top: 20px; padding: 10px 20px; background-color: #4CAF50; color: #fff; text-decoration: none; border-radius: 5px; font-size: 16px;">RESETEAR CONTRASEÑA</a>`
+      "Resetea tu Contraseña",
+      `
+      <!DOCTYPE html>
+      <html lang="es">
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>Resetear Contraseña</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              background-color: #f4f4f4;
+              color: #333;
+              margin: 0;
+              padding: 0;
+            }
+            .container {
+              max-width: 600px;
+              margin: 0 auto;
+              padding: 20px;
+              background-color: #333;
+              border-radius: 8px;
+            }
+            .header {
+              text-align: center;
+              padding: 10px 0;
+              background-color: #ff6f00;
+              color: white;
+              border-radius: 8px 8px 0 0;
+            }
+            .content {
+              padding: 20px;
+              background-color: #fff;
+              border-radius: 0 0 8px 8px;
+            }
+            .button {
+              display: block;
+              width: 100%;
+              max-width: 250px;
+              margin: 20px auto;
+              padding: 15px;
+              background-color: #ff6f00;
+              color: white !important;
+              text-align: center;
+              text-decoration: none;
+              border-radius: 4px;
+              font-weight: bold;
+              font-size: 16px;
+              cursor: pointer;
+            }
+            .button:hover {
+              background-color: #e65d00; /* Hacer más oscuro al pasar el cursor */
+            }
+            .content p{
+              color: #000 !important;
+            }
+            .footer {
+              text-align: center;
+              margin-top: 30px;
+              color: #999;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>Resetear tu Contraseña</h1>
+            </div>
+            <div class="content">
+              <p>Hola,</p>
+              <p>Has solicitado un reseteo de contraseña para tu cuenta. Por favor, haz clic en el botón de abajo para restablecer tu contraseña.</p>
+              <a href="${link}" class="button" target="_blank">RESETEAR CONTRASEÑA</a>
+              <p>Si no solicitaste un reseteo de contraseña, simplemente ignora este correo.</p>
+              <p>Gracias,</p>
+              <p>El equipo de Distri7030</p>
+            </div>
+            <div class="footer">
+              <p>© 2024 Distri7030. Todos los derechos reservados.</p>
+            </div>
+          </div>
+        </body>
+      </html>
+      `
     );
 
     res.status(200).send({ ok: true });
@@ -274,6 +356,7 @@ export const forgotPassword = async (req, res) => {
     return res.status(404).json({ ok: false, message: "Ocurrió un error." });
   }
 };
+
 
 export const GETresetPassword = async (req, res) => {
   const { id, token } = req.params;

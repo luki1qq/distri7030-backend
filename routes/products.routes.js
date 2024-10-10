@@ -3,13 +3,14 @@ import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
 import {
   createProductWithImage,
-  createProduct,
   getProduct,
   getProducts,
   deleteProduct,
   getProductsByCategory,
   createImage,
   createImageAsociatedAtURL,
+  createProduct,
+  createImageLink
 } from "../controllers/products.controller.js";
 import { authRequired } from "../middlewares/validateToken.js";
 import { upload, s3 } from "../middlewares/upload.js";
@@ -29,8 +30,9 @@ router.post(
   upload.single("image"),
   createProductWithImage
 );
-router.post("/create-products");
-
+// Usados con el runner
+router.post("/create-products", createProduct);
+router.post("/create-images-link", createImageLink);
 router.get("/get-products", getProducts);
 router.get("/get-product/:id", getProduct);
 router.get("/get-products-by-category/:categoryId", getProductsByCategory);
@@ -72,7 +74,7 @@ router.post("/upload", upload.single("image"), async (req, res) => {
   }
 });
 
-router.get("/get-images-s3", async (req,res) => {
+router.get("/get-images-s3", async (req, res) => {
   try {
     const bucketName = process.env.AWS_BUCKET_NAME; // Asegúrate de obtener el nombre del bucket correctamente
     const folderPrefix = "nombre-de-la-carpeta/"; // Prefijo opcional, si deseas listar en una carpeta

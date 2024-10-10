@@ -1,15 +1,17 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Resetear contraseña</title>
-      <style>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Resetear contraseña</title>
+  <style>
     /* Estilos generales */
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f4f4f9;
+      background-color: #333;
+      /* Fondo oscuro */
       display: flex;
       justify-content: center;
       align-items: center;
@@ -21,13 +23,15 @@
       background-color: #fff;
       border-radius: 8px;
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      padding: 20px;
-      width: 300px;
+      padding: 30px;
+      width: 400px;
       text-align: center;
     }
 
     h1 {
-      color: #333;
+      color: #ff6f00;
+      /* Color naranja del encabezado */
+      margin-bottom: 20px;
     }
 
     /* Estilos para el formulario */
@@ -50,18 +54,19 @@
 
     input[type="password"]:focus {
       outline: none;
-      border-color: #4CAF50;
+      border-color: #ff6f00;
+      /* Cambiar borde a naranja */
     }
 
     input[type="submit"] {
       width: 100%;
-      background-color: #4CAF50;
+      background-color: #ff6f00;
+      /* Botón con color naranja */
       color: white;
       border: none;
       padding: 14px 20px;
       text-align: center;
       text-decoration: none;
-      display: inline-block;
       font-size: 16px;
       margin-top: 10px;
       cursor: pointer;
@@ -70,49 +75,58 @@
     }
 
     input[type="submit"]:hover {
-      background-color: #45a049;
+      background-color: #e65d00;
+      /* Hacer más oscuro al pasar el cursor */
     }
-      </style>
-    <script>
-      // Función para validar que las contraseñas sean iguales
-      function validatePasswords(event) {
-        const password = document.getElementById('password').value;
-        const confirmPassword = document.getElementById('confirm-password').value;
-        
-        if (password !== confirmPassword) {
-          event.preventDefault(); // Previene el envío del formulario
-          alert('Las contraseñas no coinciden.');
-        }
+
+    .email {
+      color: #666;
+      font-size: 20px;
+      margin-bottom: 20px;
+    }
+
+    /* Agregar responsividad */
+    @media (max-width: 768px) {
+      .container {
+        width: 90%;
+        padding: 20px;
       }
-      
-      // Agrega un event listener al formulario
-      document.addEventListener('DOMContentLoaded', function() {
-        const form = document.querySelector('form');
-        form.addEventListener('submit', validatePasswords);
-      });
-    </script>
-  </head>
-  <body>
-    <div class="container">
-      <h2>Resetear Contraseña</h2>
-      <form action="" method="post">
-       <h3><%= email %></h3>
-      <input
-        type="password"
-        name="password"
-        id="password"
-        placeholder="Contraseña"
-        required
-      />
-      <input
-        type="password"
-        name="confirm-password"
-        id="confirm-password"
-        placeholder="Confirmar Contraseña"
-        required
-      />
+    }
+  </style>
+
+  <script>
+    // Función para validar que las contraseñas sean iguales
+    function validatePasswords(event) {
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirm-password').value;
+
+      if (password !== confirmPassword) {
+        event.preventDefault(); // Previene el envío del formulario
+        alert('Las contraseñas no coinciden.');
+      }
+    }
+
+    // Agrega un event listener al formulario
+    document.addEventListener('DOMContentLoaded', function () {
+      const form = document.querySelector('form');
+      form.addEventListener('submit', validatePasswords);
+    });
+  </script>
+</head>
+
+<body>
+  <div class="container">
+    <h1>RESETEAR CONTRASEÑA</h1>
+    <p class="email">
+      <%= email %>
+    </p> <!-- Mostrar el correo del usuario -->
+    <form action="" method="post">
+      <input type="password" name="password" id="password" placeholder="Nueva Contraseña" required />
+      <input type="password" name="confirm-password" id="confirm-password" placeholder="Confirmar Nueva Contraseña"
+        required />
       <input type="submit" value="Enviar" />
     </form>
   </div>
-  </body>
+</body>
+
 </html>

@@ -4,9 +4,77 @@ import { PutObjectCommand } from "@aws-sdk/client-s3";
 
 const prisma = new PrismaClient();
 
-export const createProduct = async(req,res) => {
+export const createProduct = async (req, res) => {
+  const {
+    codeCompatibility,
+    priceSale,
+    description,
+    categoryId,
+    subCategoryId,
+    imageId,
+  } = req.body;
 
-}
+  // Validar los campos requeridos
+  if (
+    !codeCompatibility ||
+    !priceSale ||
+    !description ||
+    !categoryId ||
+    !subCategoryId
+  ) {
+    return res
+      .status(400)
+      .json({ error: "Todos los campos son obligatorios excepto imageId" });
+  }
+
+  try {
+    // Crear el producto en la base de datos
+    const newProduct = await prisma.products.create({
+      data: {
+        codeCompatibility,
+        priceSale,
+        description,
+        categoryId,
+        subCategoryId,
+        imageId: imageId ? imageId : null, // Image ID es opcional
+        // El campo "measure" no se usa pero sigue en el esquema, por lo que no lo incluimos aquí.
+      },
+    });
+
+    // Responder con el producto creado
+    res.status(201).json(newProduct);
+  } catch (error) {
+    console.error("Error al crear el producto:", error);
+    res.status(500).json({ error: "Error al crear el producto" });
+  }
+};
+
+export const createImageLink = async (req, res) => {
+  const { id, imageUrl, title, categoryId } = req.body;
+
+  // Validar los campos requeridos
+  if (!imageUrl || !title || !categoryId || !id) {
+    return res.status(400).json({ error: "Todos los campos son obligatorios" });
+  }
+
+  try {
+    // Crear la imagen en la base de datos
+    const newImage = await prisma.image.create({
+      data: {
+        id,
+        imageUrl,
+        title,
+        categoryId,
+      },
+    });
+
+    // Responder con la imagen creada
+    res.status(201).json(newImage);
+  } catch (error) {
+    console.error("Error al crear la imagen:", error);
+    res.status(500).json({ error: "Error al crear la imagen" });
+  }
+};
 
 export const createProductWithImage = async (req, res) => {
   try {
@@ -212,7 +280,6 @@ export const deleteProduct = async (req, res) => {
   }
 };
 
-
 export const createImageAsociatedAtURL = async (req, res) => {
   try {
     const { title, imageUrl, categoryId } = req.body;
@@ -234,4 +301,4 @@ export const createImageAsociatedAtURL = async (req, res) => {
     console.error("Error creating image:", error);
     res.status(500).json({ error: "Internal server error" });
   }
-}
+};

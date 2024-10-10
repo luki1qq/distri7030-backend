@@ -7,6 +7,8 @@ exports.getSpecificOrder = exports.cancelOrder = exports.createOrder = exports.g
 
 var _client = require("@prisma/client");
 
+var _transporterNodeMailer = require("../utils/transporterNodeMailer.js");
+
 var prisma = new _client.PrismaClient();
 
 var getOrders = function getOrders(req, res) {
@@ -191,15 +193,14 @@ var getOrdersByUser = function getOrdersByUser(req, res) {
 exports.getOrdersByUser = getOrdersByUser;
 
 var createOrder = function createOrder(req, res) {
-  var detailOrder, total, resultOrder;
+  var detailOrder, user, total, resultOrder, limitedOrderDetails, emailTemplate;
   return regeneratorRuntime.async(function createOrder$(_context4) {
     while (1) {
       switch (_context4.prev = _context4.next) {
         case 0:
           _context4.prev = 0;
           detailOrder = req.body.detailOrder;
-          console.log(detailOrder); // return res.status(201).json(detailOrder);
-          // Validate input
+          console.log(detailOrder); // Validate input
 
           if (!(!req.user.id || !detailOrder || !Array.isArray(detailOrder))) {
             _context4.next = 5;
@@ -209,6 +210,15 @@ var createOrder = function createOrder(req, res) {
           return _context4.abrupt("return", res.status(400).json(["Invalid input data"]));
 
         case 5:
+          _context4.next = 7;
+          return regeneratorRuntime.awrap(prisma.user.findUnique({
+            where: {
+              id: req.user.id
+            }
+          }));
+
+        case 7:
+          user = _context4.sent;
           // Calculate total based on detailOrder items
           total = detailOrder.reduce(function (acc, item) {
             if (typeof item.quantity !== "number" || typeof item.price !== "number" || typeof item.productId !== "number") {
@@ -222,7 +232,7 @@ var createOrder = function createOrder(req, res) {
             return acc + item.quantity * item.price;
           }, 0); // Create order in the database
 
-          _context4.next = 8;
+          _context4.next = 11;
           return regeneratorRuntime.awrap(prisma.order.create({
             data: {
               userId: req.user.id,
@@ -239,19 +249,37 @@ var createOrder = function createOrder(req, res) {
               }
             },
             include: {
-              detailOrder: true
-            } // Include detailOrder in the result
+              detailOrder: {
+                include: {
+                  Product: {
+                    select: {
+                      codeCompatibility: true // Get the codeCompatibility
+
+                    }
+                  }
+                }
+              }
+            } // Include detailOrder with product details
 
           }));
 
-        case 8:
+        case 11:
           resultOrder = _context4.sent;
+          console.log(resultOrder); // Limit to 5 products in the email
+
+          limitedOrderDetails = resultOrder.detailOrder.slice(0, 5);
+          emailTemplate = "\n    <!DOCTYPE html>\n    <html lang=\"es\">\n      <head>\n        <meta charset=\"UTF-8\" />\n        <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n        <title>Resumen de Pedido</title>\n        <style>\n          body {\n            font-family: Arial, sans-serif;\n            background-color: #f4f4f4;\n            color: #333;\n          }\n          .container {\n            max-width: 600px;\n            margin: 0 auto;\n            background-color: #fff;\n            padding: 20px;\n            border-radius: 8px;\n            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);\n          }\n          h1 {\n            color: #ff6f00;\n          }\n          .order-summary {\n            margin-top: 20px;\n          }\n          .order-summary th, .order-summary td {\n            padding: 10px;\n            text-align: left;\n            border-bottom: 1px solid #ddd;\n          }\n          .total {\n            font-weight: bold;\n            color: #ff6f00;\n            text-align: right;\n          }\n          .footer {\n            margin-top: 30px;\n            text-align: center;\n            font-size: 12px;\n            color: #777;\n          }\n        </style>\n      </head>\n      <body>\n        <div class=\"container\">\n          <h1>Nuevo Pedido</h1>\n          <p>Estimado <strong>".concat(user.firstName, " ").concat(user.lastName, "</strong>,</p>\n          <p>Gracias por tu pedido. A continuaci\xF3n, te presentamos el resumen del pedido realizado:</p>\n\n          <h2>Detalles del Pedido</h2>\n          <table class=\"order-summary\" width=\"100%\">\n            <thead>\n              <tr>\n                <th>Producto (C\xF3digo de Compatibilidad)</th>\n                <th>Cantidad</th>\n                <th>Precio Unitario</th>\n                <th>Subtotal</th>\n              </tr>\n            </thead>\n            <tbody>\n              ").concat(limitedOrderDetails.map(function (detail) {
+            return "\n                <tr>\n                  <td>".concat(detail.Product.codeCompatibility, "</td>\n                  <td>").concat(detail.quantity, "</td>\n                  <td>$").concat(detail.price.toFixed(2), "</td>\n                  <td>$").concat((detail.price * detail.quantity).toFixed(2), "</td>\n                </tr>\n              ");
+          }).join(""), "\n              <tr>\n                <td colspan=\"3\" class=\"total\">Total:</td>\n                <td class=\"total\">$").concat(resultOrder.total.toFixed(2), "</td>\n              </tr>\n            </tbody>\n          </table>\n\n          <h3>Observaciones: ").concat(resultOrder.observation || "Sin observaciones", "</h3>\n\n          <p>Estado del pedido: <strong>").concat(resultOrder.orderState, "</strong></p>\n\n          <div class=\"footer\">\n            <p>\xA9 2024 Distri7030. Todos los derechos reservados.</p>\n          </div>\n        </div>\n      </body>\n    </html>\n  "); // Send email to user and admin
+
+          (0, _transporterNodeMailer.sendEmail)(user.email, "RESUMEN DE TU PEDIDO ".concat(resultOrder.id), emailTemplate);
+          (0, _transporterNodeMailer.sendEmail)(process.env.MAIL_ADRESS_ADDRESS, "NUEVO PEDIDO: ".concat(resultOrder.id), emailTemplate);
           res.status(201).json(resultOrder);
-          _context4.next = 16;
+          _context4.next = 24;
           break;
 
-        case 12:
-          _context4.prev = 12;
+        case 20:
+          _context4.prev = 20;
           _context4.t0 = _context4["catch"](0);
           console.error(_context4.t0); // Log the error for debugging
 
@@ -259,12 +287,12 @@ var createOrder = function createOrder(req, res) {
             error: "Error creating order"
           });
 
-        case 16:
+        case 24:
         case "end":
           return _context4.stop();
       }
     }
-  }, null, null, [[0, 12]]);
+  }, null, null, [[0, 20]]);
 };
 
 exports.createOrder = createOrder;
