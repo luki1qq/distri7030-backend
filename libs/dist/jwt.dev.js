@@ -13,9 +13,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "d
 
 function createAccessToken(payload) {
   return new Promise(function (resolve, reject) {
-    _jsonwebtoken["default"].sign(payload, _secrets.JWT_SECRET, {
-      expiresIn: "1d"
-    }, function (err, token) {
+    _jsonwebtoken["default"].sign(payload, _secrets.JWT_SECRET, {}, function (err, token) {
       if (err) {
         reject(err);
       }

@@ -39,6 +39,6 @@ router.post('/confirm/:token', POSTSetPassword)
 router.post('/forgot-password', forgotPassword)
 router.get("/verifyToken", verifyToken);
 
-router.get("/profile", authRequired, profile);
-router.post('/resend-client', authRequired, reSendEmailClient)
+router.get("/profile", profile);
+router.post('/resend-client', reSendEmailClient)
 export default router;

@@ -357,7 +357,6 @@ export const forgotPassword = async (req, res) => {
   }
 };
 
-
 export const GETresetPassword = async (req, res) => {
   const { id, token } = req.params;
   const idParse = parseInt(id, 10);
@@ -468,11 +467,82 @@ const sendEmailActivate = (email, user) => {
     expiresIn: "2d",
   });
   const urlConfirm = `${process.env.APIGATEWAY_URL}/api/auth/confirm/${token}`;
-  let message = `<p>Tu cuenta de cliente es: <br>
-      CORREO ELECTRONICO: ${user.email}
-      Confirma tu mail haciendo click en el siguiente enlace y establece una contraseña. </p> 
-            <a href="${urlConfirm}" style="display: inline-block; margin-top: 20px; padding: 10px 20px; background-color: #4CAF50; color: #fff; text-decoration: none; border-radius: 5px; font-size: 16px;">CONFIRMAR EMAIL</a>
-            <small>Link válido por 3 dias</small>`;
+
+  let message = `
+  <!DOCTYPE html>
+  <html lang="es">
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Confirma tu cuenta</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          background-color: #f4f4f4;
+          color: #333;
+          margin: 0;
+          padding: 0;
+        }
+        .container {
+          max-width: 600px;
+          margin: 0 auto;
+          background-color: #fff;
+          padding: 20px;
+          border-radius: 8px;
+          box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+          color: #ff6f00;
+          text-align: center;
+        }
+        p {
+          font-size: 16px;
+          line-height: 1.5;
+        }
+        .button {
+          display: inline-block;
+          margin-top: 20px;
+          padding: 15px 30px;
+          background-color: #ff6f00;
+          color: white;
+          text-decoration: none;
+          border-radius: 5px;
+          font-size: 16px;
+          text-align: center;
+        }
+        .button:hover {
+          background-color: #e65c00;
+        }
+        .footer {
+          margin-top: 30px;
+          text-align: center;
+          font-size: 12px;
+          color: #777;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <h1>Confirma tu cuenta en Distri7030</h1>
+        <p>Hola,</p>
+        <p>Tu cuenta ha sido creada exitosamente. Para activarla, confirma tu correo electrónico haciendo clic en el botón de abajo. Además, tendrás la opción de establecer una contraseña.</p>
+        
+        <p>Detalles de tu cuenta:</p>
+        <ul>
+          <li><strong>Correo electrónico:</strong> ${user.email}</li>
+        </ul>
+
+        <a href="${urlConfirm}" class="button">CONFIRMAR EMAIL</a>
+
+        <p><small>Este enlace es válido por 3 días.</small></p>
+
+        <div class="footer">
+          <p>© 2024 Distri7030. Todos los derechos reservados.</p>
+        </div>
+      </div>
+    </body>
+  </html>
+  `;
 
   sendEmail(email, "CONFIRMA TU CUENTA EN DISTRI7030", message);
 };

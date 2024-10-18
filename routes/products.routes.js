@@ -28,7 +28,7 @@ const router = Router();
 
 router.post(
   "/create-product-with-image",
-  authRequired,
+  
   upload.single("image"),
   createProductWithImage
 );

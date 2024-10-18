@@ -41,7 +41,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 var prisma = new _client.PrismaClient();
 var router = (0, _express.Router)();
-router.post("/create-product-with-image", _validateToken.authRequired, _upload.upload.single("image"), _productsController.createProductWithImage); // Usados con el runner
+router.post("/create-product-with-image", _upload.upload.single("image"), _productsController.createProductWithImage); // Usados con el runner
 
 router.post("/create-products", _productsController.createProduct);
 router.post("/create-images-link", _productsController.createImageLink);
