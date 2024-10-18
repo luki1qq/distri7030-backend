@@ -4,7 +4,7 @@ import { sendEmail } from "../utils/transporterNodeMailer.js";
 
 export const getOrders = async (req, res) => {
   try {
-    const { userId } = parseInt(req.params) ;
+    const { userId } = req.params;
     // Obtener los parámetros de paginación desde la URL o definir valores predeterminados
     const page = parseInt(req.query.page) || 1; // Página actual (por defecto 1)
     const limit = parseInt(req.query.limit) || 10; // Número de resultados por página (por defecto 10)
@@ -15,7 +15,7 @@ export const getOrders = async (req, res) => {
     // Consulta Prisma con paginación
     const orders = await prisma.order.findMany({
       where: {
-        userId: userId,
+        userId: parseInt(userId),
         isActive: true,
       },
       skip: skip, // Omitir el número de registros calculados
@@ -25,7 +25,7 @@ export const getOrders = async (req, res) => {
     // Contar el número total de órdenes activas para este usuario
     const totalOrders = await prisma.order.count({
       where: {
-        userId: userId,
+        userId: parseInt(userId),
         isActive: true,
       },
     });
@@ -109,17 +109,22 @@ export const getOrdersByUser = async (req, res) => {
 export const createOrder = async (req, res) => {
   try {
     const { detailOrder } = req.body;
-    const { userId } = parseInt(req.params) ;
+    const { userId } = req.params;
     console.log(detailOrder);
 
     // Validate input
+    console.log("user id");
+
+    // console.log(detailOrder);
+    // console.log(Array.isArray(detailOrder));
+
     if (!userId || !detailOrder || !Array.isArray(detailOrder)) {
       return res.status(400).json(["Invalid input data"]);
     }
 
     const user = await prisma.user.findUnique({
       where: {
-        id: userId,
+        id: parseInt(userId),
       },
     });
 
@@ -141,7 +146,7 @@ export const createOrder = async (req, res) => {
     // Create order in the database
     const resultOrder = await prisma.order.create({
       data: {
-        userId: userId,
+        userId: parseInt(userId),
         total,
         observation: req.body.observation,
         detailOrder: {

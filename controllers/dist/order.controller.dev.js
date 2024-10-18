@@ -12,14 +12,13 @@ var _transporterNodeMailer = require("../utils/transporterNodeMailer.js");
 var prisma = new _client.PrismaClient();
 
 var getOrders = function getOrders(req, res) {
-  var _parseInt, userId, page, limit, skip, orders, totalOrders;
-
+  var userId, page, limit, skip, orders, totalOrders;
   return regeneratorRuntime.async(function getOrders$(_context) {
     while (1) {
       switch (_context.prev = _context.next) {
         case 0:
           _context.prev = 0;
-          _parseInt = parseInt(req.params), userId = _parseInt.userId; // Obtener los parámetros de paginación desde la URL o definir valores predeterminados
+          userId = req.params.userId; // Obtener los parámetros de paginación desde la URL o definir valores predeterminados
 
           page = parseInt(req.query.page) || 1; // Página actual (por defecto 1)
 
@@ -31,7 +30,7 @@ var getOrders = function getOrders(req, res) {
           _context.next = 7;
           return regeneratorRuntime.awrap(prisma.order.findMany({
             where: {
-              userId: userId,
+              userId: parseInt(userId),
               isActive: true
             },
             skip: skip,
@@ -45,7 +44,7 @@ var getOrders = function getOrders(req, res) {
           _context.next = 10;
           return regeneratorRuntime.awrap(prisma.order.count({
             where: {
-              userId: userId,
+              userId: parseInt(userId),
               isActive: true
             }
           }));
@@ -195,33 +194,35 @@ var getOrdersByUser = function getOrdersByUser(req, res) {
 exports.getOrdersByUser = getOrdersByUser;
 
 var createOrder = function createOrder(req, res) {
-  var detailOrder, _parseInt2, userId, user, total, resultOrder, limitedOrderDetails, emailTemplate;
-
+  var detailOrder, userId, user, total, resultOrder, limitedOrderDetails, emailTemplate;
   return regeneratorRuntime.async(function createOrder$(_context4) {
     while (1) {
       switch (_context4.prev = _context4.next) {
         case 0:
           _context4.prev = 0;
           detailOrder = req.body.detailOrder;
-          _parseInt2 = parseInt(req.params), userId = _parseInt2.userId;
+          userId = req.params.userId;
           console.log(detailOrder); // Validate input
 
+          console.log("user id"); // console.log(detailOrder);
+          // console.log(Array.isArray(detailOrder));
+
           if (!(!userId || !detailOrder || !Array.isArray(detailOrder))) {
-            _context4.next = 6;
+            _context4.next = 7;
             break;
           }
 
           return _context4.abrupt("return", res.status(400).json(["Invalid input data"]));
 
-        case 6:
-          _context4.next = 8;
+        case 7:
+          _context4.next = 9;
           return regeneratorRuntime.awrap(prisma.user.findUnique({
             where: {
-              id: userId
+              id: parseInt(userId)
             }
           }));
 
-        case 8:
+        case 9:
           user = _context4.sent;
           // Calculate total based on detailOrder items
           total = detailOrder.reduce(function (acc, item) {
@@ -236,10 +237,10 @@ var createOrder = function createOrder(req, res) {
             return acc + item.quantity * item.price;
           }, 0); // Create order in the database
 
-          _context4.next = 12;
+          _context4.next = 13;
           return regeneratorRuntime.awrap(prisma.order.create({
             data: {
-              userId: userId,
+              userId: parseInt(userId),
               total: total,
               observation: req.body.observation,
               detailOrder: {
@@ -267,7 +268,7 @@ var createOrder = function createOrder(req, res) {
 
           }));
 
-        case 12:
+        case 13:
           resultOrder = _context4.sent;
           console.log(resultOrder); // Limit to 5 products in the email
 
@@ -279,11 +280,11 @@ var createOrder = function createOrder(req, res) {
           (0, _transporterNodeMailer.sendEmail)(user.email, "RESUMEN DE TU PEDIDO ".concat(resultOrder.id), emailTemplate);
           (0, _transporterNodeMailer.sendEmail)(process.env.MAIL_ADRESS_ADDRESS, "NUEVO PEDIDO: ".concat(resultOrder.id), emailTemplate);
           res.status(201).json(resultOrder);
-          _context4.next = 25;
+          _context4.next = 26;
           break;
 
-        case 21:
-          _context4.prev = 21;
+        case 22:
+          _context4.prev = 22;
           _context4.t0 = _context4["catch"](0);
           console.error(_context4.t0); // Log the error for debugging
 
@@ -291,12 +292,12 @@ var createOrder = function createOrder(req, res) {
             error: "Error creating order"
           });
 
-        case 25:
+        case 26:
         case "end":
           return _context4.stop();
       }
     }
-  }, null, null, [[0, 21]]);
+  }, null, null, [[0, 22]]);
 };
 
 exports.createOrder = createOrder;
