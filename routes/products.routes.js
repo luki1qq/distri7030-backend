@@ -10,7 +10,7 @@ import {
   createImage,
   createImageAsociatedAtURL,
   createProduct,
-  createImageLink
+  createImageLink,
 } from "../controllers/products.controller.js";
 import { authRequired } from "../middlewares/validateToken.js";
 import { upload, s3 } from "../middlewares/upload.js";
@@ -19,6 +19,8 @@ import {
   ListObjectsV2Command,
   S3Client,
 } from "@aws-sdk/client-s3";
+import XLSX from 'xlsx';
+import path from 'path';
 import { isAdmin } from "../middlewares/validateRol.js";
 
 const prisma = new PrismaClient();
@@ -73,32 +75,48 @@ router.post("/upload", upload.single("image"), async (req, res) => {
     res.status(500).json({ error: "Error al subir la imagen" });
   }
 });
-
 router.get("/get-images-s3", async (req, res) => {
   try {
-    const bucketName = process.env.AWS_BUCKET_NAME; // Asegúrate de obtener el nombre del bucket correctamente
-    const folderPrefix = "nombre-de-la-carpeta/"; // Prefijo opcional, si deseas listar en una carpeta
+    const bucketName = process.env.AWS_BUCKET_NAME;
+    const folderPrefix = "nombre-de-la-carpeta/";
 
     const params = {
       Bucket: bucketName,
-      // Prefix: folderPrefix, // Si estás buscando dentro de una subcarpeta
     };
 
-    const command = new ListObjectsV2Command(params);
-    const data = await s3.send(command);
+    let allObjects = [];
+    let continuationToken = undefined;
 
-    // Crear los enlaces permanentes
-    const permanentLinks = data.Contents.map((item) => {
+    do {
+      const command = new ListObjectsV2Command({
+        ...params,
+        ContinuationToken: continuationToken,
+      });
+      const data = await s3.send(command);
+      allObjects = allObjects.concat(data.Contents);
+      continuationToken = data.IsTruncated ? data.NextContinuationToken : undefined;
+    } while (continuationToken);
+
+    const permanentLinks = allObjects.map((item) => {
       const url = `https://${bucketName}.s3.${process.env.AWS_REGION}.amazonaws.com/${item.Key}`;
       return { key: item.Key, url };
     });
 
-    console.log("Enlaces permanentes de los objetos en S3:");
-    permanentLinks.forEach((link) => console.log(link));
+    // Crear y guardar archivo Excel
+    const workbook = XLSX.utils.book_new();
+    const worksheetData = permanentLinks.map(link => [link.key, link.url]);
+    const worksheet = XLSX.utils.aoa_to_sheet([["Key", "URL"], ...worksheetData]);
+    XLSX.utils.book_append_sheet(workbook, worksheet, "S3 Links");
 
-    res.json({ links: permanentLinks });
+    const excelFilePath = path.join(process.cwd(), 's3_links.xlsx');
+    XLSX.writeFile(workbook, excelFilePath);
+    console.log(`Enlaces guardados en Excel: ${excelFilePath}`);
+
+    res.json({ message: "Enlaces generados y guardados correctamente.", excelFilePath });
   } catch (error) {
     console.error("Error al listar objetos en S3:", error);
+    res.status(500).json({ error: "Error al obtener las imágenes." });
   }
 });
+
 export default router;

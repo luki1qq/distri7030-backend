@@ -16,7 +16,7 @@ app.use(
     origin: [
       "http://localhost:5173",
       "https://tienda.distri7030.com",
-      "http://186.153.111.120:5173",
+      "http://181.94.78.103:5173",
     ],
     credentials: true, // Permitir el envío de credenciales (cookies)
   })

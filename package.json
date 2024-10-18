@@ -7,7 +7,6 @@
   "prisma": {
     "seed": "node prisma/seed.js"
   },
-  
   "scripts": {
     "test": "jest --env=node",
     "dev": "nodemon index.js",
@@ -33,7 +32,8 @@
     "multer": "^1.4.5-lts.1",
     "multer-s3": "^3.0.1",
     "multer-s3-v3": "^33.0.12",
-    "nodemailer": "6.9.13"
+    "nodemailer": "6.9.13",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "jest": "^29.7.0",

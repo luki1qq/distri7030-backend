@@ -13,13 +13,14 @@ import {
   getProductsByImage,
   getProductSelectedByImage,
   getImageInfo,
-  getProductByCategory
+  getProductByCategory,
+  getTwoCategoriesWithImages
 } from "../controllers/categories.controller.js";
 
 const prisma = new PrismaClient();
 const router = Router();
 router.post("/create-subcategory",  createSubCategory);
-router.post("/create-category",authRequired,  createCategory);
+router.post("/create-category",  createCategory);
 router.get("/get-categories", getCategories);
 router.get("/get-product-by-category/:categoryId", getProductByCategory);
 router.get("/get-category/:id", getCategory);
@@ -27,6 +28,7 @@ router.get("/get-subcategories", getSubcategories);
 router.get("/get-subcategory/:id", getSubCategory);
 router.get("/get-images-by-category/:categoryId", getImagesByCategory);
 router.get("/get-product-selected/:imageId", getProductSelectedByImage);
+router.get("/get-two-categories/:categoryID", getTwoCategoriesWithImages);
 
 router.get("/get-products-by-image/:imageId", getProductsByImage);
 router.get("/get-image-info/:imageId", getImageInfo);

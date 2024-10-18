@@ -43,8 +43,11 @@ export const createSubCategory = async (req, res) => {
     }
 
     const subCategory = await prisma.subCategory.create({
-      data: { 
-        id, description, categoryId },
+      data: {
+        id,
+        description,
+        categoryId,
+      },
     });
 
     res.status(200).json(subCategory);
@@ -82,6 +85,39 @@ export const getCategories = async (req, res) => {
     res.json(category);
   } catch (error) {
     console.error("Error getting category:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const getTwoCategoriesWithImages = async (req, res) => {
+  try {
+    const categoryID = parseInt(req.params.categoryID) ;
+
+    const categoriesWithImages = await prisma.category.findMany({
+      where: {
+        id: {
+          in: [1, 4], // Hardcodeando las categorías 1 y 4
+        },
+      },
+      select: {
+        id: true,
+        description: true,
+        isActive: true,
+        Images: {
+          // Relación con las imágenes en lugar de productos
+          take: 10, // Limitar a 10 imágenes por categoría
+          select: {
+            id: true,
+            imageUrl: true,
+            title: true, // Si necesitas mostrar también el título
+          },
+        },
+      },
+    });
+
+    res.json(categoriesWithImages);
+  } catch (error) {
+    console.error("Error getting categories with images:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };

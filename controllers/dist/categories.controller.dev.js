@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.getProductByCategory = exports.getImageInfo = exports.getProductsByImage = exports.getProductSelectedByImage = exports.getImagesByCategory = exports.getSubCategory = exports.getSubcategories = exports.getCategories = exports.getCategory = exports.createSubCategory = exports.createCategory = void 0;
+exports.getProductByCategory = exports.getImageInfo = exports.getProductsByImage = exports.getProductSelectedByImage = exports.getImagesByCategory = exports.getSubCategory = exports.getSubcategories = exports.getTwoCategoriesWithImages = exports.getCategories = exports.getCategory = exports.createSubCategory = exports.createCategory = void 0;
 
 var _client = require("@prisma/client");
 
@@ -223,33 +223,91 @@ var getCategories = function getCategories(req, res) {
 
 exports.getCategories = getCategories;
 
-var getSubcategories = function getSubcategories(req, res) {
-  var subCategory;
-  return regeneratorRuntime.async(function getSubcategories$(_context5) {
+var getTwoCategoriesWithImages = function getTwoCategoriesWithImages(req, res) {
+  var categoryID, categoriesWithImages;
+  return regeneratorRuntime.async(function getTwoCategoriesWithImages$(_context5) {
     while (1) {
       switch (_context5.prev = _context5.next) {
         case 0:
           _context5.prev = 0;
-          _context5.next = 3;
+          categoryID = parseInt(req.params.categoryID);
+          _context5.next = 4;
+          return regeneratorRuntime.awrap(prisma.category.findMany({
+            where: {
+              id: {
+                "in": [1, 4] // Hardcodeando las categorías 1 y 4
+
+              }
+            },
+            select: {
+              id: true,
+              description: true,
+              isActive: true,
+              Images: {
+                // Relación con las imágenes en lugar de productos
+                take: 10,
+                // Limitar a 10 imágenes por categoría
+                select: {
+                  id: true,
+                  imageUrl: true,
+                  title: true // Si necesitas mostrar también el título
+
+                }
+              }
+            }
+          }));
+
+        case 4:
+          categoriesWithImages = _context5.sent;
+          res.json(categoriesWithImages);
+          _context5.next = 12;
+          break;
+
+        case 8:
+          _context5.prev = 8;
+          _context5.t0 = _context5["catch"](0);
+          console.error("Error getting categories with images:", _context5.t0);
+          res.status(500).json({
+            error: "Internal server error"
+          });
+
+        case 12:
+        case "end":
+          return _context5.stop();
+      }
+    }
+  }, null, null, [[0, 8]]);
+};
+
+exports.getTwoCategoriesWithImages = getTwoCategoriesWithImages;
+
+var getSubcategories = function getSubcategories(req, res) {
+  var subCategory;
+  return regeneratorRuntime.async(function getSubcategories$(_context6) {
+    while (1) {
+      switch (_context6.prev = _context6.next) {
+        case 0:
+          _context6.prev = 0;
+          _context6.next = 3;
           return regeneratorRuntime.awrap(prisma.subCategory.findMany());
 
         case 3:
-          subCategory = _context5.sent;
+          subCategory = _context6.sent;
           res.json(subCategory);
-          _context5.next = 11;
+          _context6.next = 11;
           break;
 
         case 7:
-          _context5.prev = 7;
-          _context5.t0 = _context5["catch"](0);
-          console.error("Error getting subcategory:", _context5.t0);
+          _context6.prev = 7;
+          _context6.t0 = _context6["catch"](0);
+          console.error("Error getting subcategory:", _context6.t0);
           res.status(500).json({
             error: "Internal server error"
           });
 
         case 11:
         case "end":
-          return _context5.stop();
+          return _context6.stop();
       }
     }
   }, null, null, [[0, 7]]);
@@ -259,13 +317,13 @@ exports.getSubcategories = getSubcategories;
 
 var getSubCategory = function getSubCategory(req, res) {
   var id, subCategories;
-  return regeneratorRuntime.async(function getSubCategory$(_context6) {
+  return regeneratorRuntime.async(function getSubCategory$(_context7) {
     while (1) {
-      switch (_context6.prev = _context6.next) {
+      switch (_context7.prev = _context7.next) {
         case 0:
-          _context6.prev = 0;
+          _context7.prev = 0;
           id = req.params.id;
-          _context6.next = 4;
+          _context7.next = 4;
           return regeneratorRuntime.awrap(prisma.subCategory.findMany({
             where: {
               categoryId: parseInt(id)
@@ -273,33 +331,33 @@ var getSubCategory = function getSubCategory(req, res) {
           }));
 
         case 4:
-          subCategories = _context6.sent;
+          subCategories = _context7.sent;
 
           if (subCategories) {
-            _context6.next = 7;
+            _context7.next = 7;
             break;
           }
 
-          return _context6.abrupt("return", res.status(404).json({
+          return _context7.abrupt("return", res.status(404).json({
             error: "Subcategories not found"
           }));
 
         case 7:
           res.json(subCategories);
-          _context6.next = 14;
+          _context7.next = 14;
           break;
 
         case 10:
-          _context6.prev = 10;
-          _context6.t0 = _context6["catch"](0);
-          console.error("Error getting subcategories:", _context6.t0);
+          _context7.prev = 10;
+          _context7.t0 = _context7["catch"](0);
+          console.error("Error getting subcategories:", _context7.t0);
           res.status(500).json({
             error: "Internal server error"
           });
 
         case 14:
         case "end":
-          return _context6.stop();
+          return _context7.stop();
       }
     }
   }, null, null, [[0, 10]]);
@@ -347,19 +405,19 @@ exports.getSubCategory = getSubCategory;
 
 var getImagesByCategory = function getImagesByCategory(req, res) {
   var categoryId, page, limit, skip, images, totalImages;
-  return regeneratorRuntime.async(function getImagesByCategory$(_context7) {
+  return regeneratorRuntime.async(function getImagesByCategory$(_context8) {
     while (1) {
-      switch (_context7.prev = _context7.next) {
+      switch (_context8.prev = _context8.next) {
         case 0:
-          _context7.prev = 0;
+          _context8.prev = 0;
           categoryId = req.params.categoryId;
 
           if (categoryId) {
-            _context7.next = 4;
+            _context8.next = 4;
             break;
           }
 
-          return _context7.abrupt("return", res.status(400).json({
+          return _context8.abrupt("return", res.status(400).json({
             error: "Category ID is required"
           }));
 
@@ -372,7 +430,7 @@ var getImagesByCategory = function getImagesByCategory(req, res) {
 
           skip = (page - 1) * limit; // Consulta Prisma con paginación
 
-          _context7.next = 9;
+          _context8.next = 9;
           return regeneratorRuntime.awrap(prisma.image.findMany({
             where: {
               categoryId: parseInt(categoryId) // ID de la categoría seleccionada
@@ -391,8 +449,8 @@ var getImagesByCategory = function getImagesByCategory(req, res) {
           }));
 
         case 9:
-          images = _context7.sent;
-          _context7.next = 12;
+          images = _context8.sent;
+          _context8.next = 12;
           return regeneratorRuntime.awrap(prisma.image.count({
             where: {
               categoryId: parseInt(categoryId) // Contar solo en la categoría seleccionada
@@ -401,7 +459,7 @@ var getImagesByCategory = function getImagesByCategory(req, res) {
           }));
 
         case 12:
-          totalImages = _context7.sent;
+          totalImages = _context8.sent;
           // Devolver los datos paginados junto con el número total de páginas
           res.json({
             page: page,
@@ -410,20 +468,20 @@ var getImagesByCategory = function getImagesByCategory(req, res) {
             totalImages: totalImages,
             images: images
           });
-          _context7.next = 20;
+          _context8.next = 20;
           break;
 
         case 16:
-          _context7.prev = 16;
-          _context7.t0 = _context7["catch"](0);
-          console.error("Error getting products:", _context7.t0);
+          _context8.prev = 16;
+          _context8.t0 = _context8["catch"](0);
+          console.error("Error getting products:", _context8.t0);
           res.status(500).json({
             error: "Internal server error"
           });
 
         case 20:
         case "end":
-          return _context7.stop();
+          return _context8.stop();
       }
     }
   }, null, null, [[0, 16]]);
@@ -433,24 +491,24 @@ exports.getImagesByCategory = getImagesByCategory;
 
 var getProductSelectedByImage = function getProductSelectedByImage(req, res) {
   var imageId, products;
-  return regeneratorRuntime.async(function getProductSelectedByImage$(_context8) {
+  return regeneratorRuntime.async(function getProductSelectedByImage$(_context9) {
     while (1) {
-      switch (_context8.prev = _context8.next) {
+      switch (_context9.prev = _context9.next) {
         case 0:
-          _context8.prev = 0;
+          _context9.prev = 0;
           imageId = req.params.imageId;
 
           if (imageId) {
-            _context8.next = 4;
+            _context9.next = 4;
             break;
           }
 
-          return _context8.abrupt("return", res.status(400).json({
+          return _context9.abrupt("return", res.status(400).json({
             error: "image ID is required"
           }));
 
         case 4:
-          _context8.next = 6;
+          _context9.next = 6;
           return regeneratorRuntime.awrap(prisma.products.findMany({
             where: {
               imageId: parseInt(imageId) // ID de la imagen seleccionada
@@ -477,33 +535,33 @@ var getProductSelectedByImage = function getProductSelectedByImage(req, res) {
           }));
 
         case 6:
-          products = _context8.sent;
+          products = _context9.sent;
 
           if (products) {
-            _context8.next = 9;
+            _context9.next = 9;
             break;
           }
 
-          return _context8.abrupt("return", res.status(404).json({
+          return _context9.abrupt("return", res.status(404).json({
             error: "Products not found"
           }));
 
         case 9:
           res.json(products);
-          _context8.next = 16;
+          _context9.next = 16;
           break;
 
         case 12:
-          _context8.prev = 12;
-          _context8.t0 = _context8["catch"](0);
-          console.error("Error getting product:", _context8.t0);
+          _context9.prev = 12;
+          _context9.t0 = _context9["catch"](0);
+          console.error("Error getting product:", _context9.t0);
           res.status(500).json({
             error: "Internal server error"
           });
 
         case 16:
         case "end":
-          return _context8.stop();
+          return _context9.stop();
       }
     }
   }, null, null, [[0, 12]]);
@@ -513,62 +571,7 @@ exports.getProductSelectedByImage = getProductSelectedByImage;
 
 var getProductsByImage = function getProductsByImage(req, res) {
   var imageId, products;
-  return regeneratorRuntime.async(function getProductsByImage$(_context9) {
-    while (1) {
-      switch (_context9.prev = _context9.next) {
-        case 0:
-          _context9.prev = 0;
-          imageId = req.params.imageId;
-
-          if (imageId) {
-            _context9.next = 4;
-            break;
-          }
-
-          return _context9.abrupt("return", res.status(400).json({
-            error: "Image ID is required"
-          }));
-
-        case 4:
-          _context9.next = 6;
-          return regeneratorRuntime.awrap(prisma.products.findMany({
-            where: {
-              imageId: parseInt(imageId)
-            },
-            select: {
-              codeCompatibility: true,
-              description: true,
-              measure: true
-            }
-          }));
-
-        case 6:
-          products = _context9.sent;
-          res.json(products);
-          _context9.next = 14;
-          break;
-
-        case 10:
-          _context9.prev = 10;
-          _context9.t0 = _context9["catch"](0);
-          console.error("Error getting products:", _context9.t0);
-          res.status(500).json({
-            error: "Internal server error"
-          });
-
-        case 14:
-        case "end":
-          return _context9.stop();
-      }
-    }
-  }, null, null, [[0, 10]]);
-};
-
-exports.getProductsByImage = getProductsByImage;
-
-var getImageInfo = function getImageInfo(req, res) {
-  var imageId, image;
-  return regeneratorRuntime.async(function getImageInfo$(_context10) {
+  return regeneratorRuntime.async(function getProductsByImage$(_context10) {
     while (1) {
       switch (_context10.prev = _context10.next) {
         case 0:
@@ -586,22 +589,27 @@ var getImageInfo = function getImageInfo(req, res) {
 
         case 4:
           _context10.next = 6;
-          return regeneratorRuntime.awrap(prisma.image.findUnique({
+          return regeneratorRuntime.awrap(prisma.products.findMany({
             where: {
-              id: parseInt(imageId)
+              imageId: parseInt(imageId)
+            },
+            select: {
+              codeCompatibility: true,
+              description: true,
+              measure: true
             }
           }));
 
         case 6:
-          image = _context10.sent;
-          res.json(image);
+          products = _context10.sent;
+          res.json(products);
           _context10.next = 14;
           break;
 
         case 10:
           _context10.prev = 10;
           _context10.t0 = _context10["catch"](0);
-          console.error("Error getting image info:", _context10.t0);
+          console.error("Error getting products:", _context10.t0);
           res.status(500).json({
             error: "Internal server error"
           });
@@ -614,17 +622,67 @@ var getImageInfo = function getImageInfo(req, res) {
   }, null, null, [[0, 10]]);
 };
 
-exports.getImageInfo = getImageInfo;
+exports.getProductsByImage = getProductsByImage;
 
-var getProductByCategory = function getProductByCategory(req, res) {
-  var categoryId, products;
-  return regeneratorRuntime.async(function getProductByCategory$(_context11) {
+var getImageInfo = function getImageInfo(req, res) {
+  var imageId, image;
+  return regeneratorRuntime.async(function getImageInfo$(_context11) {
     while (1) {
       switch (_context11.prev = _context11.next) {
         case 0:
           _context11.prev = 0;
+          imageId = req.params.imageId;
+
+          if (imageId) {
+            _context11.next = 4;
+            break;
+          }
+
+          return _context11.abrupt("return", res.status(400).json({
+            error: "Image ID is required"
+          }));
+
+        case 4:
+          _context11.next = 6;
+          return regeneratorRuntime.awrap(prisma.image.findUnique({
+            where: {
+              id: parseInt(imageId)
+            }
+          }));
+
+        case 6:
+          image = _context11.sent;
+          res.json(image);
+          _context11.next = 14;
+          break;
+
+        case 10:
+          _context11.prev = 10;
+          _context11.t0 = _context11["catch"](0);
+          console.error("Error getting image info:", _context11.t0);
+          res.status(500).json({
+            error: "Internal server error"
+          });
+
+        case 14:
+        case "end":
+          return _context11.stop();
+      }
+    }
+  }, null, null, [[0, 10]]);
+};
+
+exports.getImageInfo = getImageInfo;
+
+var getProductByCategory = function getProductByCategory(req, res) {
+  var categoryId, products;
+  return regeneratorRuntime.async(function getProductByCategory$(_context12) {
+    while (1) {
+      switch (_context12.prev = _context12.next) {
+        case 0:
+          _context12.prev = 0;
           categoryId = req.params.categoryId;
-          _context11.next = 4;
+          _context12.next = 4;
           return regeneratorRuntime.awrap(prisma.products.findMany({
             where: {
               categoryId: parseInt(categoryId)
@@ -632,22 +690,22 @@ var getProductByCategory = function getProductByCategory(req, res) {
           }));
 
         case 4:
-          products = _context11.sent;
+          products = _context12.sent;
           res.json(products);
-          _context11.next = 12;
+          _context12.next = 12;
           break;
 
         case 8:
-          _context11.prev = 8;
-          _context11.t0 = _context11["catch"](0);
-          console.error("Error getting products:", _context11.t0);
+          _context12.prev = 8;
+          _context12.t0 = _context12["catch"](0);
+          console.error("Error getting products:", _context12.t0);
           res.status(500).json({
             error: "Internal server error"
           });
 
         case 12:
         case "end":
-          return _context11.stop();
+          return _context12.stop();
       }
     }
   }, null, null, [[0, 8]]);

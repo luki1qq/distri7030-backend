@@ -17,9 +17,28 @@ var _upload = require("../middlewares/upload.js");
 
 var _clientS = require("@aws-sdk/client-s3");
 
+var _xlsx = _interopRequireDefault(require("xlsx"));
+
+var _path = _interopRequireDefault(require("path"));
+
 var _validateRol = require("../middlewares/validateRol.js");
 
-// import { prisma } from "../db.js";
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread(); }
+
+function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance"); }
+
+function _iterableToArray(iter) { if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter); }
+
+function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } }
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(source, true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(source).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 var prisma = new _client.PrismaClient();
 var router = (0, _express.Router)();
 router.post("/create-product-with-image", _validateToken.authRequired, _upload.upload.single("image"), _productsController.createProductWithImage); // Usados con el runner
@@ -89,55 +108,81 @@ router.post("/upload", _upload.upload.single("image"), function _callee(req, res
   }, null, null, [[0, 14]]);
 });
 router.get("/get-images-s3", function _callee2(req, res) {
-  var bucketName, folderPrefix, params, command, data, permanentLinks;
+  var bucketName, folderPrefix, params, allObjects, continuationToken, command, data, permanentLinks, workbook, worksheetData, worksheet, excelFilePath;
   return regeneratorRuntime.async(function _callee2$(_context2) {
     while (1) {
       switch (_context2.prev = _context2.next) {
         case 0:
           _context2.prev = 0;
-          bucketName = process.env.AWS_BUCKET_NAME; // Asegúrate de obtener el nombre del bucket correctamente
-
-          folderPrefix = "nombre-de-la-carpeta/"; // Prefijo opcional, si deseas listar en una carpeta
-
+          bucketName = process.env.AWS_BUCKET_NAME;
+          folderPrefix = "nombre-de-la-carpeta/";
           params = {
-            Bucket: bucketName // Prefix: folderPrefix, // Si estás buscando dentro de una subcarpeta
-
+            Bucket: bucketName
           };
-          command = new _clientS.ListObjectsV2Command(params);
-          _context2.next = 7;
+          allObjects = [];
+          continuationToken = undefined;
+
+        case 6:
+          command = new _clientS.ListObjectsV2Command(_objectSpread({}, params, {
+            ContinuationToken: continuationToken
+          }));
+          _context2.next = 9;
           return regeneratorRuntime.awrap(_upload.s3.send(command));
 
-        case 7:
+        case 9:
           data = _context2.sent;
-          // Crear los enlaces permanentes
-          permanentLinks = data.Contents.map(function (item) {
+          allObjects = allObjects.concat(data.Contents);
+          continuationToken = data.IsTruncated ? data.NextContinuationToken : undefined;
+
+        case 12:
+          if (continuationToken) {
+            _context2.next = 6;
+            break;
+          }
+
+        case 13:
+          permanentLinks = allObjects.map(function (item) {
             var url = "https://".concat(bucketName, ".s3.").concat(process.env.AWS_REGION, ".amazonaws.com/").concat(item.Key);
             return {
               key: item.Key,
               url: url
             };
+          }); // Crear y guardar archivo Excel
+
+          workbook = _xlsx["default"].utils.book_new();
+          worksheetData = permanentLinks.map(function (link) {
+            return [link.key, link.url];
           });
-          console.log("Enlaces permanentes de los objetos en S3:");
-          permanentLinks.forEach(function (link) {
-            return console.log(link);
-          });
+          worksheet = _xlsx["default"].utils.aoa_to_sheet([["Key", "URL"]].concat(_toConsumableArray(worksheetData)));
+
+          _xlsx["default"].utils.book_append_sheet(workbook, worksheet, "S3 Links");
+
+          excelFilePath = _path["default"].join(process.cwd(), 's3_links.xlsx');
+
+          _xlsx["default"].writeFile(workbook, excelFilePath);
+
+          console.log("Enlaces guardados en Excel: ".concat(excelFilePath));
           res.json({
-            links: permanentLinks
+            message: "Enlaces generados y guardados correctamente.",
+            excelFilePath: excelFilePath
           });
-          _context2.next = 17;
+          _context2.next = 28;
           break;
 
-        case 14:
-          _context2.prev = 14;
+        case 24:
+          _context2.prev = 24;
           _context2.t0 = _context2["catch"](0);
           console.error("Error al listar objetos en S3:", _context2.t0);
+          res.status(500).json({
+            error: "Error al obtener las imágenes."
+          });
 
-        case 17:
+        case 28:
         case "end":
           return _context2.stop();
       }
     }
-  }, null, null, [[0, 14]]);
+  }, null, null, [[0, 24]]);
 });
 var _default = router;
 exports["default"] = _default;
