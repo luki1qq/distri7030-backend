@@ -38,7 +38,7 @@ router.post("/create-images-link", createImageLink);
 router.get("/get-products", getProducts);
 router.get("/get-product/:id", getProduct);
 router.get("/get-products-by-category/:categoryId", getProductsByCategory);
-router.delete("/delete-product/:id", authRequired, isAdmin, deleteProduct);
+router.delete("/delete-product/:id",   deleteProduct);
 router.post("/create-image-by-category", upload.single("image"), createImage);
 router.post("/create-image", createImageAsociatedAtURL);
 router.post("/upload", upload.single("image"), async (req, res) => {

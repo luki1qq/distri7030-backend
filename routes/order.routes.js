@@ -7,11 +7,11 @@ import { getOrders, createOrder, cancelOrder,getOrdersGeneral, getSpecificOrder 
 
 const router = Router();
 
-router.get("/get-orders", getOrders);
-router.post("/create-order", createOrder);
+router.get("/get-orders/:userId", getOrders);
+router.post("/create-order/:userId", createOrder);
 router.put("/cancel-order/:id", cancelOrder);
 router.get("/get-general-orders", getOrdersGeneral);
-router.get("/get-order/:id", getOrders);
+// router.get("/get-order/:id", getOrders);
 router.get("/get-specific-order/:id", getSpecificOrder);
 
 export default router;

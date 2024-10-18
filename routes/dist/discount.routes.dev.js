@@ -20,7 +20,7 @@ router.get("/get-discount/:id", _discountController.getDiscount);
 router.get("/get-discounts-by-product/:productId", _discountController.getDiscountsByProduct);
 router.post("/create-discount", _discountController.createDiscount);
 router.post("/create-discount-to-user", _discountController.createDiscountToUser);
-router.get("/get-all-products-with-discount", _discountController.getAllProductsByDiscountByUser);
+router.get("/get-all-products-with-discount/:user", _discountController.getAllProductsByDiscountByUser);
 router.post("/create-discount-to-many-user", _discountController.associateManyUsersToDiscount);
 router.get("/get-discounts-users", _discountController.getDiscountsUsers);
 var _default = router;

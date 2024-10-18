@@ -48,7 +48,7 @@ router.post("/create-images-link", _productsController.createImageLink);
 router.get("/get-products", _productsController.getProducts);
 router.get("/get-product/:id", _productsController.getProduct);
 router.get("/get-products-by-category/:categoryId", _productsController.getProductsByCategory);
-router["delete"]("/delete-product/:id", _validateToken.authRequired, _validateRol.isAdmin, _productsController.deleteProduct);
+router["delete"]("/delete-product/:id", _productsController.deleteProduct);
 router.post("/create-image-by-category", _upload.upload.single("image"), _productsController.createImage);
 router.post("/create-image", _productsController.createImageAsociatedAtURL);
 router.post("/upload", _upload.upload.single("image"), function _callee(req, res) {

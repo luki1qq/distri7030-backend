@@ -27,7 +27,6 @@ export const getDiscount = async (req, res) => {
   }
 };
 
-
 export const getDiscountsByProduct = async (req, res) => {
   try {
     const { productId } = req.params;
@@ -114,7 +113,8 @@ export const createDiscountToUser = async (req, res) => {
 export const getAllProductsByDiscountByUser = async (req, res) => {
   try {
     // Obtener los productos con descuento
-    const productsWithDescounts = await prisma.products.findMany({
+    const { user } = req.params;
+    const productsWithDiscounts = await prisma.products.findMany({
       include: {
         ProductDiscount: {
           where: {
@@ -122,7 +122,7 @@ export const getAllProductsByDiscountByUser = async (req, res) => {
               isActive: true,
               startDate: { lte: new Date() },
               endDate: { gte: new Date() },
-              UserDiscount: { some: { userId: parseInt(req.user.id) } },
+              UserDiscount: { some: { userId: parseInt(user) } },
             },
           },
           include: {
@@ -134,7 +134,7 @@ export const getAllProductsByDiscountByUser = async (req, res) => {
 
     // Obtener el mejor descuento por producto
     const bestDiscountPerProducts = new Map();
-    for (const product of productsWithDescounts) {
+    for (const product of productsWithDiscounts) {
       for (const productDiscount of product.ProductDiscount) {
         const discount = productDiscount.Discount;
         if (bestDiscountPerProducts.has(product.id)) {
@@ -147,10 +147,19 @@ export const getAllProductsByDiscountByUser = async (req, res) => {
         }
       }
     }
-    // Obtener los productos sin descuento
-    const productsWithoutDiscount = productsWithDescounts
-      .filter((product) => !bestDiscountPerProducts.has(product.id))
-      .map((product) => ({
+
+    // Obtener todos los productos sin descuentos
+    const productsWithoutDiscount = await prisma.products.findMany({
+      where: {
+        ProductDiscount: {
+          none: {}, // Productos sin ninguna relación con descuentos
+        },
+      },
+    });
+
+    // Formatear los productos sin descuento
+    const formattedProductsWithoutDiscount = productsWithoutDiscount.map(
+      (product) => ({
         id: product.id,
         codeCompatibility: product.codeCompatibility,
         priceSale: product.priceSale,
@@ -158,13 +167,14 @@ export const getAllProductsByDiscountByUser = async (req, res) => {
         percentage: 0,
         finalPrice: product.priceSale,
         discountPercentage: 0,
-      }));
+      })
+    );
 
-    // Obtener los productos con descuento
-    const resultProductsWithDescounts = Array.from(
+    // Obtener los productos con el mejor descuento
+    const formattedProductsWithDiscounts = Array.from(
       bestDiscountPerProducts.entries()
     ).map(([productId, discount]) => {
-      const product = productsWithDescounts.find(
+      const product = productsWithDiscounts.find(
         (product) => product.id === productId
       );
       return {
@@ -178,9 +188,10 @@ export const getAllProductsByDiscountByUser = async (req, res) => {
         discountPercentage: discount.percentage,
       };
     });
+
     // Unir los productos con descuento y sin descuento
-    const products = resultProductsWithDescounts.concat(
-      productsWithoutDiscount
+    const products = formattedProductsWithDiscounts.concat(
+      formattedProductsWithoutDiscount
     );
 
     res.json(products);
@@ -217,7 +228,7 @@ export const associateManyUsersToDiscount = async (req, res) => {
   }
 };
 
-export const getDiscountsUsers = async (req, res) => {  
+export const getDiscountsUsers = async (req, res) => {
   try {
     const discounts = await prisma.userDiscount.findMany();
     res.json(discounts);
